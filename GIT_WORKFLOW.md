@@ -32,8 +32,6 @@ git push -u origin main
 - **`feature/tracker-page`** : Page de tracker
 - **`feature/leaderboard-page`** : Page de classement
 - **`feature/profile-page`** : Page de profil
-- **`feature/theme-dark-mode`** : Mode sombre
-- **`feature/i18n`** : Internationalisation
 - etc.
 
 ### Branches de correction
