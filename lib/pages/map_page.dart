@@ -511,23 +511,7 @@ class _MapPageState extends State<MapPage> {
                   }).toList(),
                 ),
               ],
-              
-              // Horaires
-              if (cafe.openingHours.isNotEmpty) ...[
-                const SizedBox(height: 12),
-                const Text(
-                  'Horaires :',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF6B4423),
-                  ),
-                ),
-                const SizedBox(height: 4),
-                ...cafe.openingHours.map((hours) => Text(
-                  hours,
-                  style: const TextStyle(color: Color(0xFF6B4423)),
-                )),
-              ],
+
             ],
           ),
         ),

@@ -76,10 +76,6 @@ class CafeService {
           centerPosition.longitude + 0.01,
         ),
         phone: '+33 1 23 45 67 89',
-        openingHours: [
-          'Lun-Ven: 7h-19h',
-          'Sam-Dim: 8h-20h',
-        ],
         rating: 4.5,
         reviewCount: 127,
         availableCoffeeTypes: [
@@ -99,10 +95,6 @@ class CafeService {
           centerPosition.longitude + 0.015,
         ),
         phone: '+33 1 98 76 54 32',
-        openingHours: [
-          'Lun-Sam: 6h30-18h',
-          'Dim: Fermé',
-        ],
         rating: 4.8,
         reviewCount: 89,
         availableCoffeeTypes: [
@@ -122,9 +114,6 @@ class CafeService {
           centerPosition.longitude - 0.01,
         ),
         phone: '+33 1 11 22 33 44',
-        openingHours: [
-          'Tous les jours: 7h-22h',
-        ],
         rating: 4.2,
         reviewCount: 201,
         availableCoffeeTypes: [
@@ -145,10 +134,6 @@ class CafeService {
           centerPosition.longitude - 0.012,
         ),
         phone: '+33 1 55 66 77 88',
-        openingHours: [
-          'Lun-Sam: 6h-20h',
-          'Dim: 7h-13h',
-        ],
         rating: 4.0,
         reviewCount: 56,
         availableCoffeeTypes: [
@@ -165,9 +150,6 @@ class CafeService {
           centerPosition.latitude + 0.02,
           centerPosition.longitude + 0.005,
         ),
-        openingHours: [
-          '24/7',
-        ],
         rating: 3.5,
         reviewCount: 12,
         availableCoffeeTypes: [
@@ -180,8 +162,7 @@ class CafeService {
     ];
   }
 
-  /// Charge les cafés depuis une API réelle
-  /// TODO: Implémenter avec Google Places API ou similaire
+  /// TODO: Récupérer les endroits depuis la base de l'appi sur supabase
   Future<void> loadCafesFromAPI(LatLng position) async {
     // TODO: Appel API réel
     // Exemple avec Google Places :

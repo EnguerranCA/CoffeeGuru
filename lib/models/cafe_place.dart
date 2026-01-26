@@ -7,7 +7,6 @@ class Cafe {
   final String address;
   final LatLng location;
   final String? phone;
-  final List<String> openingHours;
   final double rating;
   final int reviewCount;
   final List<CoffeeType> availableCoffeeTypes;
@@ -20,7 +19,6 @@ class Cafe {
     required this.address,
     required this.location,
     this.phone,
-    this.openingHours = const [],
     this.rating = 0.0,
     this.reviewCount = 0,
     this.availableCoffeeTypes = const [],
@@ -39,10 +37,6 @@ class Cafe {
         json['longitude'] as double,
       ),
       phone: json['phone'] as String?,
-      openingHours: (json['opening_hours'] as List<dynamic>?)
-              ?.map((e) => e.toString())
-              .toList() ??
-          [],
       rating: (json['rating'] ?? 0.0).toDouble(),
       reviewCount: json['review_count'] ?? 0,
       availableCoffeeTypes: (json['coffee_types'] as List<dynamic>?)
@@ -69,7 +63,6 @@ class Cafe {
       'latitude': location.latitude,
       'longitude': location.longitude,
       'phone': phone,
-      'opening_hours': openingHours,
       'rating': rating,
       'review_count': reviewCount,
       'coffee_types': availableCoffeeTypes.map((e) => e.name).toList(),
