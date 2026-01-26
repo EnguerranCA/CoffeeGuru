@@ -452,20 +452,6 @@ class _MapPageState extends State<MapPage> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Note
-              if (cafe.rating > 0)
-                Row(
-                  children: [
-                    const Icon(Icons.star, color: Colors.amber, size: 20),
-                    const SizedBox(width: 4),
-                    Text(
-                      '${cafe.rating.toStringAsFixed(1)} (${cafe.reviewCount} avis)',
-                      style: const TextStyle(color: Color(0xFF6B4423)),
-                    ),
-                  ],
-                ),
-              const SizedBox(height: 12),
-              
               // Distance
               Row(
                 children: [

@@ -6,9 +6,6 @@ class Cafe {
   final String name;
   final String address;
   final LatLng location;
-  final String? phone;
-  final double rating;
-  final int reviewCount;
   final List<CoffeeType> availableCoffeeTypes;
   final CafeType type;
   final String? imageUrl;
@@ -18,9 +15,6 @@ class Cafe {
     required this.name,
     required this.address,
     required this.location,
-    this.phone,
-    this.rating = 0.0,
-    this.reviewCount = 0,
     this.availableCoffeeTypes = const [],
     required this.type,
     this.imageUrl,
@@ -36,9 +30,6 @@ class Cafe {
         json['latitude'] as double,
         json['longitude'] as double,
       ),
-      phone: json['phone'] as String?,
-      rating: (json['rating'] ?? 0.0).toDouble(),
-      reviewCount: json['review_count'] ?? 0,
       availableCoffeeTypes: (json['coffee_types'] as List<dynamic>?)
               ?.map((e) => CoffeeType.values.firstWhere(
                     (type) => type.name == e,
@@ -62,9 +53,6 @@ class Cafe {
       'address': address,
       'latitude': location.latitude,
       'longitude': location.longitude,
-      'phone': phone,
-      'rating': rating,
-      'review_count': reviewCount,
       'coffee_types': availableCoffeeTypes.map((e) => e.name).toList(),
       'type': type.name,
       'image_url': imageUrl,

@@ -75,9 +75,6 @@ class CafeService {
           centerPosition.latitude + 0.01,
           centerPosition.longitude + 0.01,
         ),
-        phone: '+33 1 23 45 67 89',
-        rating: 4.5,
-        reviewCount: 127,
         availableCoffeeTypes: [
           CoffeeType.espresso,
           CoffeeType.cappuccino,
@@ -94,9 +91,6 @@ class CafeService {
           centerPosition.latitude - 0.01,
           centerPosition.longitude + 0.015,
         ),
-        phone: '+33 1 98 76 54 32',
-        rating: 4.8,
-        reviewCount: 89,
         availableCoffeeTypes: [
           CoffeeType.espresso,
           CoffeeType.americano,
@@ -113,9 +107,6 @@ class CafeService {
           centerPosition.latitude + 0.015,
           centerPosition.longitude - 0.01,
         ),
-        phone: '+33 1 11 22 33 44',
-        rating: 4.2,
-        reviewCount: 201,
         availableCoffeeTypes: [
           CoffeeType.espresso,
           CoffeeType.cappuccino,
@@ -133,9 +124,6 @@ class CafeService {
           centerPosition.latitude - 0.008,
           centerPosition.longitude - 0.012,
         ),
-        phone: '+33 1 55 66 77 88',
-        rating: 4.0,
-        reviewCount: 56,
         availableCoffeeTypes: [
           CoffeeType.espresso,
           CoffeeType.cappuccino,
@@ -150,8 +138,6 @@ class CafeService {
           centerPosition.latitude + 0.02,
           centerPosition.longitude + 0.005,
         ),
-        rating: 3.5,
-        reviewCount: 12,
         availableCoffeeTypes: [
           CoffeeType.espresso,
           CoffeeType.cappuccino,
