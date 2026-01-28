@@ -46,17 +46,21 @@ class _MapPageState extends State<MapPage> {
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
         if (permission == LocationPermission.denied) {
-          setState(() {
-            _errorMessage = 'Permission de localisation refusée';
-          });
+          if (mounted) {
+            setState(() {
+              _errorMessage = 'Permission de localisation refusée';
+            });
+          }
           return;
         }
       }
 
       if (permission == LocationPermission.deniedForever) {
-        setState(() {
-          _errorMessage = 'Permission de localisation refusée définitivement';
-        });
+        if (mounted) {
+          setState(() {
+            _errorMessage = 'Permission de localisation refusée définitivement';
+          });
+        }
         return;
       }
 
@@ -65,16 +69,20 @@ class _MapPageState extends State<MapPage> {
         desiredAccuracy: LocationAccuracy.high,
       );
 
-      setState(() {
-        _currentLocation = LatLng(position.latitude, position.longitude);
-      });
+      if (mounted) {
+        setState(() {
+          _currentLocation = LatLng(position.latitude, position.longitude);
+        });
 
-      // Centrer la carte sur la position
-      _mapController.move(_currentLocation, 13.0);
+        // Centrer la carte sur la position
+        _mapController.move(_currentLocation, 13.0);
+      }
     } catch (e) {
-      setState(() {
-        _errorMessage = 'Erreur de localisation: $e';
-      });
+      if (mounted) {
+        setState(() {
+          _errorMessage = 'Erreur de localisation: $e';
+        });
+      }
     }
   }
 
@@ -83,15 +91,19 @@ class _MapPageState extends State<MapPage> {
     try {
       await _cafeService.loadCafesFromAPI(_currentLocation);
       final cafes = await _cafeService.getCafesNearby(_currentLocation, radiusKm: 10);
-      setState(() {
-        _cafes = cafes;
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _cafes = cafes;
+          _isLoading = false;
+        });
+      }
     } catch (e) {
-      setState(() {
-        _errorMessage = 'Erreur de chargement des cafés: $e';
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _errorMessage = 'Erreur de chargement des cafés: $e';
+          _isLoading = false;
+        });
+      }
     }
   }
 
@@ -99,21 +111,23 @@ class _MapPageState extends State<MapPage> {
   Future<void> _applyFilters() async {
     List<Cafe> filteredCafes = await _cafeService.getAllCafes();
     
-    setState(() {
-      // Filtre par type d'établissement
-      if (_selectedCafeTypes.isNotEmpty) {
-        filteredCafes = _cafeService.filterByType(_selectedCafeTypes.toList());
-      }
-      
-      // Filtre par type de café
-      if (_selectedCoffeeTypes.isNotEmpty) {
-        filteredCafes = filteredCafes.where((cafe) =>
-          cafe.availableCoffeeTypes.any((type) => _selectedCoffeeTypes.contains(type))
-        ).toList();
-      }
-      
-      _cafes = filteredCafes;
-    });
+    if (mounted) {
+      setState(() {
+        // Filtre par type d'établissement
+        if (_selectedCafeTypes.isNotEmpty) {
+          filteredCafes = _cafeService.filterByType(_selectedCafeTypes.toList());
+        }
+        
+        // Filtre par type de café
+        if (_selectedCoffeeTypes.isNotEmpty) {
+          filteredCafes = filteredCafes.where((cafe) =>
+            cafe.availableCoffeeTypes.any((type) => _selectedCoffeeTypes.contains(type))
+          ).toList();
+        }
+        
+        _cafes = filteredCafes;
+      });
+    }
   }
 
   /// Affiche le dialog de filtres
@@ -167,12 +181,12 @@ class _MapPageState extends State<MapPage> {
           TextButton(
             onPressed: () async {
               final allCafes = await _cafeService.getAllCafes();
-              setState(() {
-                _selectedCafeTypes.clear();
-                _selectedCoffeeTypes.clear();
-                _cafes = allCafes;
-              });
               if (mounted) {
+                setState(() {
+                  _selectedCafeTypes.clear();
+                  _selectedCoffeeTypes.clear();
+                  _cafes = allCafes;
+                });
                 Navigator.pop(context);
               }
             },

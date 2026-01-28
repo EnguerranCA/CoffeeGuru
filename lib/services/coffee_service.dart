@@ -1,5 +1,6 @@
 import '../models/coffee_log.dart';
 import 'database_service.dart';
+import 'auth_service.dart';
 
 class CoffeeService {
   // Singleton pattern pour partager la même instance
@@ -8,17 +9,16 @@ class CoffeeService {
   CoffeeService._internal();
 
   final DatabaseService _db = DatabaseService();
+  final AuthService _auth = AuthService();
 
   // Cache local des logs
   List<CoffeeLog> _cachedLogs = [];
 
-  // ID utilisateur actuel (temporaire - en attente d'un vrai système d'auth)
-  String currentUserId = '00000000-0000-0000-0000-000000000001';
-
   /// Récupère tous les logs de l'utilisateur courant depuis Supabase
   Future<List<CoffeeLog>> getCoffeeLogs() async {
     try {
-      final data = await _db.getCoffeeLogsByUser(currentUserId);
+      final userId = _auth.currentUserId;
+      final data = await _db.getCoffeeLogsByUser(userId);
       _cachedLogs = data.map((json) => CoffeeLog.fromJson(json)).toList();
       // Trier par date décroissante
       _cachedLogs.sort((a, b) => b.timestamp.compareTo(a.timestamp));

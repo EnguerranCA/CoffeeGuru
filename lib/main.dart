@@ -4,6 +4,7 @@ import 'pages/tracker_page.dart';
 import 'pages/leaderboard_page.dart';
 import 'pages/profile_page.dart';
 import 'services/database_service.dart';
+import 'services/auth_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -16,6 +17,14 @@ Future<void> main() async {
     print('❌ Erreur lors de l\'initialisation de Supabase: $e');
     print('⚠️ L\'application va démarrer mais les fonctionnalités de base de données ne seront pas disponibles.');
     print('⚠️ Veuillez vérifier votre fichier .env et les variables SUPABASE_URL et SUPABASE_ANON_KEY');
+  }
+
+  // Initialiser l'authentification
+  try {
+    await AuthService().initialize();
+    print('✅ Authentification initialisée');
+  } catch (e) {
+    print('❌ Erreur lors de l\'initialisation de l\'authentification: $e');
   }
 
   runApp(const CoffeeGuruApp());
