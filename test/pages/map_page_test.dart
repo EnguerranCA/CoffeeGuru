@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_application_1/pages/map_page.dart';
 import 'package:flutter_application_1/models/cafe_place.dart';
+import 'package:flutter_application_1/models/coffee_log.dart';
 import 'package:flutter_application_1/services/cafe_service.dart';
 
 void main() {

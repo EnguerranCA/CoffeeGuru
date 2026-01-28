@@ -1,5 +1,7 @@
 import 'package:latlong2/latlong.dart';
 import '../models/cafe_place.dart';
+import '../models/coffee_log.dart';
+import 'database_service.dart';
 
 /// Service pour gérer les cafés
 class CafeService {
@@ -8,184 +10,169 @@ class CafeService {
   factory CafeService() => _instance;
   CafeService._internal();
 
-  /// Liste des cafés (en mémoire pour l'instant)
-  /// TODO: Remplacer par une API réelle ou une base de données locale
-  List<Cafe> _cafes = [];
+  final DatabaseService _db = DatabaseService();
 
-  /// Récupère tous les cafés
-  List<Cafe> getAllCafes() {
-    return List.unmodifiable(_cafes);
+  /// Cache local des cafés (optionnel)
+  List<Cafe> _cachedCafes = [];
+
+  /// Récupère tous les cafés depuis Supabase
+  Future<List<Cafe>> getAllCafes() async {
+    try {
+      final data = await _db.getAll(DatabaseService.cafePlacesTable);
+      _cachedCafes = data.map((json) => Cafe.fromJson(json)).toList();
+      return _cachedCafes;
+    } catch (e) {
+      print('❌ Erreur dans CafeService.getAllCafes: $e');
+      return [];
+    }
   }
 
   /// Récupère les cafés à proximité d'une position
   /// [position] Position de référence
   /// [radiusKm] Rayon de recherche en kilomètres
-  List<Cafe> getCafesNearby(LatLng position, {double radiusKm = 5.0}) {
-    return _cafes
-        .where((cafe) => cafe.distanceFrom(position) <= radiusKm)
-        .toList()
-      ..sort((a, b) =>
+  Future<List<Cafe>> getCafesNearby(LatLng position,
+      {double radiusKm = 5.0}) async {
+    try {
+      final data = await _db.getCafePlacesNearby(
+        position.latitude,
+        position.longitude,
+        radiusKm,
+      );
+
+      final cafes = data.map((json) => Cafe.fromJson(json)).toList();
+
+      // Trier par distance
+      cafes.sort((a, b) =>
           a.distanceFrom(position).compareTo(b.distanceFrom(position)));
+
+      _cachedCafes = cafes;
+      return cafes;
+    } catch (e) {
+      print('❌ Erreur dans CafeService.getCafesNearby: $e');
+      return [];
+    }
   }
 
   /// Filtre les cafés par type d'établissement
   List<Cafe> filterByType(List<CafeType> types) {
-    if (types.isEmpty) return getAllCafes();
-    return _cafes.where((cafe) => types.contains(cafe.type)).toList();
+    if (types.isEmpty) return _cachedCafes;
+    return _cachedCafes.where((cafe) => types.contains(cafe.type)).toList();
   }
 
   /// Filtre les cafés par types de café disponibles
   List<Cafe> filterByCoffeeType(List<CoffeeType> coffeeTypes) {
-    if (coffeeTypes.isEmpty) return getAllCafes();
-    return _cafes
+    if (coffeeTypes.isEmpty) return _cachedCafes;
+    return _cachedCafes
         .where((cafe) => cafe.availableCoffeeTypes
             .any((type) => coffeeTypes.contains(type)))
         .toList();
   }
 
-  /// Recherche un café par nom
-  List<Cafe> searchByName(String query) {
-    final lowerQuery = query.toLowerCase();
-    return _cafes
-        .where((cafe) => cafe.name.toLowerCase().contains(lowerQuery))
-        .toList();
+  /// Recherche un café par nom (via Supabase)
+  Future<List<Cafe>> searchByName(String query) async {
+    try {
+      final data = await _db.searchCafePlaces(query);
+      return data.map((json) => Cafe.fromJson(json)).toList();
+    } catch (e) {
+      print('❌ Erreur dans CafeService.searchByName: $e');
+      return [];
+    }
   }
 
-  /// Récupère un café par son ID
-  Cafe? getCafeById(String id) {
+  /// Récupère un café par son ID (via Supabase)
+  Future<Cafe?> getCafeById(String id) async {
     try {
-      return _cafes.firstWhere((cafe) => cafe.id == id);
+      final data = await _db.getById(DatabaseService.cafePlacesTable, id);
+      if (data == null) return null;
+      return Cafe.fromJson(data);
     } catch (e) {
+      print('❌ Erreur dans CafeService.getCafeById: $e');
       return null;
     }
   }
 
-  /// Charge les cafés de démonstration
-  /// TODO: Remplacer par un vrai appel API
-  Future<void> loadDemoCafes(LatLng centerPosition) async {
-    // Simuler un délai réseau
-    await Future.delayed(const Duration(milliseconds: 500));
-
-    _cafes = [
-      Cafe(
-        id: '1',
-        name: 'Café des Arts',
-        address: '15 Rue de la Paix, Paris',
-        location: LatLng(
-          centerPosition.latitude + 0.01,
-          centerPosition.longitude + 0.01,
-        ),
-        availableCoffeeTypes: [
-          CoffeeType.espresso,
-          CoffeeType.cappuccino,
-          CoffeeType.latte,
-          CoffeeType.mocha,
-        ],
-        type: CafeType.cafe,
-      ),
-      Cafe(
-        id: '2',
-        name: 'Le Petit Torréfacteur',
-        address: '8 Avenue des Champs',
-        location: LatLng(
-          centerPosition.latitude - 0.01,
-          centerPosition.longitude + 0.015,
-        ),
-        availableCoffeeTypes: [
-          CoffeeType.espresso,
-          CoffeeType.americano,
-          CoffeeType.flatWhite,
-          CoffeeType.coldBrew,
-        ],
-        type: CafeType.cafe,
-      ),
-      Cafe(
-        id: '3',
-        name: 'Coffee Corner',
-        address: '42 Boulevard Saint-Germain',
-        location: LatLng(
-          centerPosition.latitude + 0.015,
-          centerPosition.longitude - 0.01,
-        ),
-        availableCoffeeTypes: [
-          CoffeeType.espresso,
-          CoffeeType.cappuccino,
-          CoffeeType.latte,
-          CoffeeType.frappe,
-          CoffeeType.decaf,
-        ],
-        type: CafeType.bar,
-      ),
-      Cafe(
-        id: '4',
-        name: 'Boulangerie du Coin',
-        address: '3 Rue du Four',
-        location: LatLng(
-          centerPosition.latitude - 0.008,
-          centerPosition.longitude - 0.012,
-        ),
-        availableCoffeeTypes: [
-          CoffeeType.espresso,
-          CoffeeType.cappuccino,
-        ],
-        type: CafeType.bakery,
-      ),
-      Cafe(
-        id: '5',
-        name: 'Distributeur Gare du Nord',
-        address: 'Gare du Nord, Hall principal',
-        location: LatLng(
-          centerPosition.latitude + 0.02,
-          centerPosition.longitude + 0.005,
-        ),
-        availableCoffeeTypes: [
-          CoffeeType.espresso,
-          CoffeeType.cappuccino,
-          CoffeeType.decaf,
-        ],
-        type: CafeType.vendingMachine,
-      ),
-    ];
-  }
-
-  /// TODO: Récupérer les endroits depuis la base de l'appi sur supabase
+  /// Charge les cafés depuis Supabase (remplace loadDemoCafes)
   Future<void> loadCafesFromAPI(LatLng position) async {
-    // TODO: Appel API réel
-    // Exemple avec Google Places :
-    // final response = await dio.get(
-    //   'https://maps.googleapis.com/maps/api/place/nearbysearch/json',
-    //   queryParameters: {
-    //     'location': '${position.latitude},${position.longitude}',
-    //     'radius': 5000,
-    //     'type': 'cafe',
-    //     'key': apiKey,
-    //   },
-    // );
-
-    // Pour l'instant, on utilise les données de démo
-    await loadDemoCafes(position);
+    // Charger les cafés proches de la position
+    await getCafesNearby(position, radiusKm: 10);
   }
 
-  /// Ajoute un nouveau café (pour admin ou contribution utilisateur)
-  void addCafe(Cafe cafe) {
-    _cafes.add(cafe);
-  }
+  /// Ajoute un nouveau café (dans Supabase)
+  Future<Cafe?> addCafe(Cafe cafe) async {
+    try {
+      // Insérer le CafePlace
+      final insertedData = await _db.insert(
+        DatabaseService.cafePlacesTable,
+        cafe.toInsertJson(),
+      );
 
-  /// Supprime un café
-  void removeCafe(String id) {
-    _cafes.removeWhere((cafe) => cafe.id == id);
-  }
+      if (insertedData == null) return null;
 
-  /// Met à jour un café
-  void updateCafe(Cafe updatedCafe) {
-    final index = _cafes.indexWhere((cafe) => cafe.id == updatedCafe.id);
-    if (index != -1) {
-      _cafes[index] = updatedCafe;
+      final newCafe = Cafe.fromJson(insertedData);
+
+      // Insérer les types de café disponibles
+      for (var coffeeType in cafe.availableCoffeeTypes) {
+        await _db.insert(
+          DatabaseService.availableCoffeeTypesTable,
+          {
+            'cafe_place_id': newCafe.id,
+            'coffee_type': coffeeType.name,
+          },
+        );
+      }
+
+      // Recharger le café avec les types de café
+      final reloadedCafe = await getCafeById(newCafe.id);
+      if (reloadedCafe != null) {
+        _cachedCafes.add(reloadedCafe);
+      }
+
+      return reloadedCafe;
+    } catch (e) {
+      print('❌ Erreur dans CafeService.addCafe: $e');
+      return null;
     }
   }
 
-  /// Nettoie les données
-  void clearCafes() {
-    _cafes.clear();
+  /// Supprime un café (de Supabase)
+  Future<bool> removeCafe(String id) async {
+    try {
+      await _db.delete(DatabaseService.cafePlacesTable, id);
+      _cachedCafes.removeWhere((cafe) => cafe.id == id);
+      return true;
+    } catch (e) {
+      print('❌ Erreur dans CafeService.removeCafe: $e');
+      return false;
+    }
+  }
+
+  /// Met à jour un café (dans Supabase)
+  Future<Cafe?> updateCafe(Cafe updatedCafe) async {
+    try {
+      final data = await _db.update(
+        DatabaseService.cafePlacesTable,
+        updatedCafe.id,
+        updatedCafe.toInsertJson(),
+      );
+
+      if (data == null) return null;
+
+      // Mettre à jour le cache
+      final index =
+          _cachedCafes.indexWhere((cafe) => cafe.id == updatedCafe.id);
+      if (index != -1) {
+        _cachedCafes[index] = Cafe.fromJson(data);
+      }
+
+      return Cafe.fromJson(data);
+    } catch (e) {
+      print('❌ Erreur dans CafeService.updateCafe: $e');
+      return null;
+    }
+  }
+
+  /// Nettoie le cache local
+  void clearCache() {
+    _cachedCafes.clear();
   }
 }

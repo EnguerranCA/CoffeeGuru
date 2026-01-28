@@ -7,19 +7,22 @@
         {
             "name": "flutter_application_1",
             "request": "launch",
-            "type": "dart"
+            "type": "dart",
+            "toolArgs": ["--dart-define-from-file=.env"]
         },
         {
             "name": "flutter_application_1 (profile mode)",
             "request": "launch",
             "type": "dart",
-            "flutterMode": "profile"
+            "flutterMode": "profile",
+            "toolArgs": ["--dart-define-from-file=.env"]
         },
         {
             "name": "flutter_application_1 (release mode)",
             "request": "launch",
             "type": "dart",
-            "flutterMode": "release"
+            "flutterMode": "release",
+            "toolArgs": ["--dart-define-from-file=.env"]
         }
     ]
 }

@@ -14,6 +14,22 @@ class TrackerPage extends StatefulWidget {
 
 class _TrackerPageState extends State<TrackerPage> {
   final CoffeeService _coffeeService = CoffeeService();
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadLogs();
+  }
+
+  Future<void> _loadLogs() async {
+    await _coffeeService.getCoffeeLogs();
+    if (mounted) {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
 
   Future<void> _showAddCoffeeDialog() async {
     final result = await showDialog<CoffeeLog>(
@@ -22,36 +38,62 @@ class _TrackerPageState extends State<TrackerPage> {
     );
 
     if (result != null) {
-      setState(() {
-        _coffeeService.addCoffeeLog(result);
-      });
-
-      if (mounted) {
+      final addedLog = await _coffeeService.addCoffeeLog(result);
+      
+      if (addedLog != null && mounted) {
+        setState(() {});
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('${result.type.emoji} ${result.type.displayName} ajouté !'),
             duration: const Duration(seconds: 2),
           ),
         );
+      } else if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Erreur lors de l\'ajout du café'),
+            duration: Duration(seconds: 2),
+          ),
+        );
       }
     }
   }
 
-  void _deleteCoffeeLog(String id) {
-    setState(() {
-      _coffeeService.removeCoffeeLog(id);
-    });
+  Future<void> _deleteCoffeeLog(String id) async {
+    final success = await _coffeeService.removeCoffeeLog(id);
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Consommation supprimée'),
-        duration: Duration(seconds: 2),
-      ),
-    );
+    if (success && mounted) {
+      setState(() {});
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Consommation supprimée'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    } else if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Erreur lors de la suppression'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text('Coffee Tracker'),
+          centerTitle: true,
+        ),
+        body: const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
     final todayCount = _coffeeService.getTodayCount();
     final coffeeLogs = _coffeeService.coffeeLogs;
 
