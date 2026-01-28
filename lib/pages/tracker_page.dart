@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import '../models/coffee_log.dart';
 import '../services/coffee_service.dart';
 import '../widgets/add_coffee_dialog.dart';
+import '../widgets/caffeine_progress_bar.dart';
 
 class TrackerPage extends StatefulWidget {
   const TrackerPage({super.key});
@@ -148,6 +149,8 @@ class _TrackerPageState extends State<TrackerPage> {
   }
 
   Widget _buildTodayStats(int todayCount) {
+    final todayCaffeine = _coffeeService.getTodayCaffeine();
+    
     return Container(
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(20),
@@ -162,32 +165,45 @@ class _TrackerPageState extends State<TrackerPage> {
           ),
         ],
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
+      child: Column(
         children: [
-          Icon(
-            Icons.local_cafe,
-            size: 32,
-            color: Theme.of(context).colorScheme.primary,
-          ),
-          const SizedBox(width: 12),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          // Compteur de cafés
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(
-                "Aujourd'hui",
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.onPrimaryContainer,
-                    ),
+              Icon(
+                Icons.local_cafe,
+                size: 32,
+                color: Theme.of(context).colorScheme.primary,
               ),
-              Text(
-                '$todayCount café${todayCount > 1 ? 's' : ''}',
-                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
+              const SizedBox(width: 12),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "Aujourd'hui",
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(context).colorScheme.onPrimaryContainer,
+                        ),
+                  ),
+                  Text(
+                    '$todayCount café${todayCount > 1 ? 's' : ''}',
+                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                  ),
+                ],
               ),
             ],
+          ),
+          const SizedBox(height: 20),
+          const Divider(),
+          const SizedBox(height: 16),
+          // Barre de progression de caféine
+          CaffeineProgressBar(
+            currentCaffeine: todayCaffeine,
+            dailyLimit: 400,
           ),
         ],
       ),

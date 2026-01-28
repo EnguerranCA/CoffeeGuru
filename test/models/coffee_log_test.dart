@@ -52,5 +52,13 @@ void main() {
       expect(CoffeeLocation.home.displayName, 'Chez moi');
       expect(CoffeeLocation.home.emoji, '🏠');
     });
+
+    test('should have caffeine values for all coffee types', () {
+      expect(CoffeeType.espresso.caffeinemg, 63);
+      expect(CoffeeType.americano.caffeinemg, 94);
+      expect(CoffeeType.mocha.caffeinemg, 95);
+      expect(CoffeeType.flatWhite.caffeinemg, 130);
+      expect(CoffeeType.coldBrew.caffeinemg, 200);
+    });
   });
 }

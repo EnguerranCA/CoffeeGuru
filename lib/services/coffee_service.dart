@@ -82,6 +82,17 @@ class CoffeeService {
     return getTodayLogs().length;
   }
 
+  // Calculer la caféine totale du jour (en mg)
+  int getTodayCaffeine() {
+    return getTodayLogs().fold(0, (sum, log) => sum + log.type.caffeinemg);
+  }
+
+  // Calculer le pourcentage de caféine par rapport à la limite (400mg)
+  double getCaffeinePercentage({int dailyLimit = 400}) {
+    final caffeine = getTodayCaffeine();
+    return (caffeine / dailyLimit * 100).clamp(0, 200); // Max 200% pour affichage
+  }
+
   // Obtenir les consommations par date
   Map<DateTime, List<CoffeeLog>> getLogsByDate() {
     final Map<DateTime, List<CoffeeLog>> logsByDate = {};
