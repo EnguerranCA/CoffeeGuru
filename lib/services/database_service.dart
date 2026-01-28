@@ -1,6 +1,5 @@
 import 'dart:math' show cos, pi;
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 /// Service pour gérer la connexion à Supabase
 class DatabaseService {
@@ -12,28 +11,32 @@ class DatabaseService {
   SupabaseClient? _client;
   bool _isInitialized = false;
 
+  // Variables d'environnement via --dart-define-from-file
+  static const String _supabaseUrl = String.fromEnvironment(
+    'SUPABASE_URL',
+    defaultValue: '',
+  );
+  static const String _supabaseAnonKey = String.fromEnvironment(
+    'SUPABASE_ANON_KEY',
+    defaultValue: '',
+  );
+
   /// Initialise la connexion à Supabase
   /// Doit être appelé au démarrage de l'application
   Future<void> initialize() async {
     if (_isInitialized) return;
 
     try {
-      // Charger les variables d'environnement
-      await dotenv.load(fileName: '.env');
-
-      final supabaseUrl = dotenv.env['SUPABASE_URL'];
-      final supabaseAnonKey = dotenv.env['SUPABASE_ANON_KEY'];
-
-      if (supabaseUrl == null || supabaseAnonKey == null) {
+      if (_supabaseUrl.isEmpty || _supabaseAnonKey.isEmpty) {
         throw Exception(
-          'SUPABASE_URL et SUPABASE_ANON_KEY doivent être définis dans le fichier .env',
+          'SUPABASE_URL et SUPABASE_ANON_KEY doivent être définis via --dart-define-from-file=.env',
         );
       }
 
       // Initialiser Supabase
       await Supabase.initialize(
-        url: supabaseUrl,
-        anonKey: supabaseAnonKey,
+        url: _supabaseUrl,
+        anonKey: _supabaseAnonKey,
       );
 
       _client = Supabase.instance.client;
