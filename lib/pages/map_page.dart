@@ -3,6 +3,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
 import '../models/cafe_place.dart';
+import '../models/coffee_log.dart';
 import '../services/cafe_service.dart';
 
 class MapPage extends StatefulWidget {
@@ -81,8 +82,9 @@ class _MapPageState extends State<MapPage> {
   Future<void> _loadCafes() async {
     try {
       await _cafeService.loadCafesFromAPI(_currentLocation);
+      final cafes = await _cafeService.getCafesNearby(_currentLocation, radiusKm: 10);
       setState(() {
-        _cafes = _cafeService.getCafesNearby(_currentLocation, radiusKm: 10);
+        _cafes = cafes;
         _isLoading = false;
       });
     } catch (e) {
@@ -94,10 +96,10 @@ class _MapPageState extends State<MapPage> {
   }
 
   /// Applique les filtres sélectionnés
-  void _applyFilters() {
+  Future<void> _applyFilters() async {
+    List<Cafe> filteredCafes = await _cafeService.getAllCafes();
+    
     setState(() {
-      List<Cafe> filteredCafes = _cafeService.getAllCafes();
-      
       // Filtre par type d'établissement
       if (_selectedCafeTypes.isNotEmpty) {
         filteredCafes = _cafeService.filterByType(_selectedCafeTypes.toList());
@@ -163,13 +165,16 @@ class _MapPageState extends State<MapPage> {
         ),
         actions: [
           TextButton(
-            onPressed: () {
+            onPressed: () async {
+              final allCafes = await _cafeService.getAllCafes();
               setState(() {
                 _selectedCafeTypes.clear();
                 _selectedCoffeeTypes.clear();
-                _cafes = _cafeService.getAllCafes();
+                _cafes = allCafes;
               });
-              Navigator.pop(context);
+              if (mounted) {
+                Navigator.pop(context);
+              }
             },
             child: const Text(
               'Réinitialiser',

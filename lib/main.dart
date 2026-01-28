@@ -3,8 +3,23 @@ import 'pages/map_page.dart';
 import 'pages/tracker_page.dart';
 import 'pages/leaderboard_page.dart';
 import 'pages/profile_page.dart';
+import 'services/database_service.dart';
 
-void main() => runApp(const CoffeeGuruApp());
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialiser la connexion à Supabase
+  try {
+    await DatabaseService().initialize();
+    print('✅ Supabase initialisé avec succès');
+  } catch (e) {
+    print('❌ Erreur lors de l\'initialisation de Supabase: $e');
+    print('⚠️ L\'application va démarrer mais les fonctionnalités de base de données ne seront pas disponibles.');
+    print('⚠️ Veuillez vérifier votre fichier .env et les variables SUPABASE_URL et SUPABASE_ANON_KEY');
+  }
+
+  runApp(const CoffeeGuruApp());
+}
 
 class CoffeeGuruApp extends StatelessWidget {
   const CoffeeGuruApp({super.key});
