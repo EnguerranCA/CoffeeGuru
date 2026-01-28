@@ -7,14 +7,16 @@ void main() {
       final timestamp = DateTime(2026, 1, 26, 14, 30);
       final log = CoffeeLog(
         id: '1',
+        userId: 'user-123',
         type: CoffeeType.espresso,
-        location: CoffeeLocation.home,
+        locationType: CoffeeLocation.home,
         timestamp: timestamp,
       );
 
       expect(log.id, '1');
+      expect(log.userId, 'user-123');
       expect(log.type, CoffeeType.espresso);
-      expect(log.location, CoffeeLocation.home);
+      expect(log.locationType, CoffeeLocation.home);
       expect(log.timestamp, timestamp);
     });
 
@@ -22,8 +24,9 @@ void main() {
       final timestamp = DateTime(2026, 1, 26, 14, 30);
       final log = CoffeeLog(
         id: '1',
+        userId: 'user-123',
         type: CoffeeType.cappuccino,
-        location: CoffeeLocation.work,
+        locationType: CoffeeLocation.work,
         timestamp: timestamp,
       );
 
@@ -32,13 +35,14 @@ void main() {
 
       expect(logFromJson.id, log.id);
       expect(logFromJson.type, log.type);
-      expect(logFromJson.location, log.location);
+      expect(logFromJson.locationType, log.locationType);
     });
   });
 
   group('Enums Tests', () {
     test('should have correct number of coffee types and locations', () {
-      expect(CoffeeType.values.length, 10);
+      // Mis à jour : 12 types après fusion
+      expect(CoffeeType.values.length, 12);
       expect(CoffeeLocation.values.length, 5);
     });
 

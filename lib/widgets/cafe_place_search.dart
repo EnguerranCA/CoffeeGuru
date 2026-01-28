@@ -1,19 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:latlong2/latlong.dart';
 import '../models/cafe_place.dart';
 import '../models/coffee_log.dart';
 import '../services/cafe_service.dart';
+import '../services/geocoding_service.dart';
 
 /// Widget de recherche et sélection d'un CafePlace
 /// Permet de rechercher dans la base ou d'ajouter un nouveau lieu
 class CafePlaceSearchDialog extends StatefulWidget {
-  /// Position GPS actuelle (pour créer un nouveau lieu)
-  final LatLng? currentLocation;
-
-  const CafePlaceSearchDialog({
-    super.key,
-    this.currentLocation,
-  });
+  const CafePlaceSearchDialog({super.key});
 
   @override
   State<CafePlaceSearchDialog> createState() => _CafePlaceSearchDialogState();
@@ -21,11 +15,13 @@ class CafePlaceSearchDialog extends StatefulWidget {
 
 class _CafePlaceSearchDialogState extends State<CafePlaceSearchDialog> {
   final CafeService _cafeService = CafeService();
+  final GeocodingService _geocodingService = GeocodingService();
   final TextEditingController _searchController = TextEditingController();
 
   List<Cafe> _searchResults = [];
   bool _isSearching = false;
   bool _showAddNewForm = false;
+  bool _isAddingCafe = false; // Nouvel état pour le chargement
 
   // Contrôleurs pour le formulaire d'ajout
   final TextEditingController _nameController = TextEditingController();
@@ -79,19 +75,38 @@ class _CafePlaceSearchDialogState extends State<CafePlaceSearchDialog> {
       return;
     }
 
-    // Utiliser la position actuelle ou une position par défaut
-    final location = widget.currentLocation ?? const LatLng(48.8566, 2.3522);
-
-    final newCafe = Cafe(
-      id: '', // Sera généré par Supabase
-      name: _nameController.text,
-      address: _addressController.text,
-      location: location,
-      type: _selectedType,
-      availableCoffeeTypes: _selectedCoffeeTypes,
-    );
+    setState(() {
+      _isAddingCafe = true;
+    });
 
     try {
+      // Géocoder l'adresse pour obtenir les coordonnées
+      final location = await _geocodingService.getCoordinates(_addressController.text);
+      
+      if (location == null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Adresse introuvable. Vérifiez l\'adresse saisie.'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+          setState(() {
+            _isAddingCafe = false;
+          });
+        }
+        return;
+      }
+
+      final newCafe = Cafe(
+        id: '', // Sera généré par Supabase
+        name: _nameController.text,
+        address: _addressController.text,
+        location: location,
+        type: _selectedType,
+        availableCoffeeTypes: _selectedCoffeeTypes,
+      );
+
       final addedCafe = await _cafeService.addCafe(newCafe);
       if (addedCafe != null && mounted) {
         Navigator.of(context).pop(addedCafe);
@@ -101,6 +116,12 @@ class _CafePlaceSearchDialogState extends State<CafePlaceSearchDialog> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Erreur lors de l\'ajout: $e')),
         );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isAddingCafe = false;
+        });
       }
     }
   }
@@ -359,7 +380,7 @@ class _CafePlaceSearchDialogState extends State<CafePlaceSearchDialog> {
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
-                          onPressed: _addNewCafePlace,
+                          onPressed: _isAddingCafe ? null : _addNewCafePlace,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF6B4423),
                             foregroundColor: Colors.white,
@@ -368,10 +389,19 @@ class _CafePlaceSearchDialogState extends State<CafePlaceSearchDialog> {
                               borderRadius: BorderRadius.circular(12),
                             ),
                           ),
-                          child: const Text(
-                            'Ajouter ce lieu',
-                            style: TextStyle(fontSize: 16),
-                          ),
+                          child: _isAddingCafe
+                              ? const SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.white,
+                                  ),
+                                )
+                              : const Text(
+                                  'Ajouter ce lieu',
+                                  style: TextStyle(fontSize: 16),
+                                ),
                         ),
                       ),
                     ],

@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:geolocator/geolocator.dart';
-import 'package:latlong2/latlong.dart';
 import '../models/coffee_log.dart';
 import '../models/cafe_place.dart' show Cafe;
 import '../services/coffee_service.dart';
@@ -191,29 +189,15 @@ class _AddCoffeeDialogState extends State<AddCoffeeDialog> {
               const SizedBox(height: 8),
               InkWell(
                 onTap: () async {
-                  // Récupérer la position actuelle pour le widget de recherche
-                  LatLng? currentLocation;
-                  try {
-                    final position = await Geolocator.getCurrentPosition();
-                    currentLocation = LatLng(position.latitude, position.longitude);
-                  } catch (e) {
-                    // Position par défaut si erreur
-                    currentLocation = const LatLng(48.8566, 2.3522);
-                  }
+                  final cafe = await showDialog<Cafe>(
+                    context: context,
+                    builder: (context) => const CafePlaceSearchDialog(),
+                  );
                   
-                  if (mounted) {
-                    final cafe = await showDialog<Cafe>(
-                      context: context,
-                      builder: (context) => CafePlaceSearchDialog(
-                        currentLocation: currentLocation,
-                      ),
-                    );
-                    
-                    if (cafe != null) {
-                      setState(() {
-                        _selectedCafe = cafe;
-                      });
-                    }
+                  if (cafe != null) {
+                    setState(() {
+                      _selectedCafe = cafe;
+                    });
                   }
                 },
                 child: Container(

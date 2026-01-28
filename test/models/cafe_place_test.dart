@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_application_1/models/cafe_place.dart';
+import 'package:flutter_application_1/models/coffee_log.dart';
 import 'package:latlong2/latlong.dart';
 
 void main() {
@@ -63,7 +64,8 @@ void main() {
       expect(cafeFromJson.address, cafe.address);
       expect(cafeFromJson.location.latitude, cafe.location.latitude);
       expect(cafeFromJson.location.longitude, cafe.location.longitude);
-      expect(cafeFromJson.availableCoffeeTypes.length, 3);
+      // Note: availableCoffeeTypes sont chargés via une table séparée dans Supabase
+      // ils ne sont pas sérialisés dans toJson()
       expect(cafeFromJson.type, cafe.type);
       expect(cafeFromJson.imageUrl, cafe.imageUrl);
     });
@@ -135,7 +137,8 @@ void main() {
 
   group('CoffeeType Enum Tests', () {
     test('should have correct number of coffee types', () {
-      expect(CoffeeType.values.length, 10);
+      // 12 types après fusion des deux enums
+      expect(CoffeeType.values.length, 12);
     });
 
     test('should have display names and emojis', () {
