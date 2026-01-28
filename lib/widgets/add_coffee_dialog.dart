@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/coffee_log.dart';
 import '../models/cafe_place.dart' show Cafe;
-import '../services/coffee_service.dart';
+import '../services/auth_service.dart';
 import 'cafe_place_search.dart';
 
 class AddCoffeeDialog extends StatefulWidget {
@@ -330,10 +330,10 @@ class _AddCoffeeDialogState extends State<AddCoffeeDialog> {
                       return;
                     }
                     
-                    final coffeeService = CoffeeService();
+                    final authService = AuthService();
                     final log = CoffeeLog(
                       id: DateTime.now().millisecondsSinceEpoch.toString(),
-                      userId: coffeeService.currentUserId,
+                      userId: authService.currentUserId,
                       type: _selectedType,
                       // Si un café est sélectionné, utiliser son ID, sinon utiliser le type de location
                       cafePlaceId: _selectedCafe?.id,

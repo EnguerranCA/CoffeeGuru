@@ -76,9 +76,9 @@ lib/
 - [ ] Popup quand la limite de café est atteinte
 
 #### Leaderboard Coffee Lovers
-- [ ] Comparaison de la consommation entre utilisateurs
-- [ ] Classement du nombre d'endroits différents visités
-- [ ] Classement des recettes goûtées
+- [x] Comparaison de la consommation entre utilisateurs
+- [x] Classement du nombre d'endroits différents visités
+- [x] Classement des recettes goûtées
 
 #### Profil
 - [ ] Création et gestion de profil utilisateur
