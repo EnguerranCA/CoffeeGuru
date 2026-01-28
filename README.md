@@ -69,10 +69,10 @@ lib/
 - [ ] Avis sur les cafés avec notes et commentaires
 
 #### Coffee Tracker
-- [ ] Suivi de la consommation de café (log quand on prend un café : où, type, heure)
-- [ ] Statistiques personnelles sur la consommation (fréquence, types préférés)
-- [ ] Visualisation comme une app de temps d'écran
-- [ ] Visualisation de la limite recommandée de consommation de caféine
+- [x] Suivi de la consommation de café (log quand on prend un café : où, type, heure)
+- [x] Statistiques personnelles sur la consommation (fréquence, types préférés)
+- [x] Visualisation comme une app de temps d'écran
+- [x] Visualisation de la limite recommandée de consommation de caféine
 - [ ] Popup quand la limite de café est atteinte
 
 #### Leaderboard Coffee Lovers

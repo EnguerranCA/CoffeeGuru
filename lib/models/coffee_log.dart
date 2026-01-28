@@ -38,21 +38,22 @@ class CoffeeLog {
 }
 
 enum CoffeeType {
-  espresso('Espresso', '☕'),
-  cappuccino('Cappuccino', '🥤'),
-  latte('Latte', '🥛'),
-  americano('Americano', '☕'),
-  macchiato('Macchiato', '🍵'),
-  mocha('Mocha', '🍫'),
-  flatWhite('Flat White', '☕'),
-  cortado('Cortado', '☕'),
-  coldBrew('Cold Brew', '🧊'),
-  affogato('Affogato', '🍨');
+  espresso('Espresso', '☕', 63),
+  cappuccino('Cappuccino', '🥤', 63),
+  latte('Latte', '🥛', 63),
+  americano('Americano', '☕', 94),
+  macchiato('Macchiato', '🍵', 63),
+  mocha('Mocha', '🍫', 95),
+  flatWhite('Flat White', '☕', 130),
+  cortado('Cortado', '☕', 63),
+  coldBrew('Cold Brew', '🧊', 200),
+  affogato('Affogato', '🍨', 63);
 
   final String displayName;
   final String emoji;
+  final int caffeinemg; // Caféine en milligrammes
 
-  const CoffeeType(this.displayName, this.emoji);
+  const CoffeeType(this.displayName, this.emoji, this.caffeinemg);
 }
 
 enum CoffeeLocation {
