@@ -137,8 +137,8 @@ void main() {
 
   group('CoffeeType Enum Tests', () {
     test('should have correct number of coffee types', () {
-      // 12 types après fusion des deux enums
-      expect(CoffeeType.values.length, 12);
+      // 10 types avec caféine
+      expect(CoffeeType.values.length, 10);
     });
 
     test('should have display names and emojis', () {

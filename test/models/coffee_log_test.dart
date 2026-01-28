@@ -41,8 +41,8 @@ void main() {
 
   group('Enums Tests', () {
     test('should have correct number of coffee types and locations', () {
-      // Mis à jour : 12 types après fusion
-      expect(CoffeeType.values.length, 12);
+      // 10 types avec caféine
+      expect(CoffeeType.values.length, 10);
       expect(CoffeeLocation.values.length, 5);
     });
 
