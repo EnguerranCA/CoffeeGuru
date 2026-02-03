@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 import '../services/coffee_service.dart';
+import '../services/badge_service.dart';
 import '../widgets/auth_dialog.dart';
+import '../widgets/badge_display.dart';
+import '../models/badge.dart' as badge_model;
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -13,16 +16,38 @@ class ProfilePage extends StatefulWidget {
 class _ProfilePageState extends State<ProfilePage> {
   final AuthService _authService = AuthService();
   final CoffeeService _coffeeService = CoffeeService();
+  final BadgeService _badgeService = BadgeService();
+  
+  List<badge_model.Badge> _badges = [];
+  bool _loadingBadges = true;
+  bool _hasShownAuthDialog = false; // Pour éviter de réafficher le dialog
 
   @override
   void initState() {
     super.initState();
     _checkAuth();
+    _loadBadges();
+  }
+
+  Future<void> _loadBadges() async {
+    if (mounted) {
+      setState(() => _loadingBadges = true);
+    }
+    
+    final badges = await _badgeService.getAllBadges();
+    
+    if (mounted) {
+      setState(() {
+        _badges = badges;
+        _loadingBadges = false;
+      });
+    }
   }
 
   void _checkAuth() {
-    if (_authService.isGuest) {
+    if (_authService.isGuest && !_hasShownAuthDialog) {
       // Afficher le dialog de connexion après le premier build
+      _hasShownAuthDialog = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _showAuthDialog();
       });
@@ -39,11 +64,11 @@ class _ProfilePageState extends State<ProfilePage> {
     if (result == true && mounted) {
       // Connexion réussie, rafraîchir les données
       await _coffeeService.refreshLogs();
+      await _loadBadges();
       setState(() {});
-    } else if (!result! && mounted) {
-      // Annulé, retourner à la page précédente
-      Navigator.of(context).pop();
     }
+    // Si annulé (result == false ou null), on reste sur la page
+    // Le flag _hasShownAuthDialog empêchera de réafficher le dialog
   }
 
   Future<void> _logout() async {
@@ -84,8 +109,42 @@ class _ProfilePageState extends State<ProfilePage> {
           title: const Text('Profil'),
           centerTitle: true,
         ),
-        body: const Center(
-          child: CircularProgressIndicator(),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.person_outline,
+                size: 80,
+                color: Colors.grey[400],
+              ),
+              const SizedBox(height: 24),
+              Text(
+                'Connectez-vous pour accéder à votre profil',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.grey[600],
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              FilledButton.icon(
+                onPressed: () {
+                  setState(() => _hasShownAuthDialog = false);
+                  _showAuthDialog();
+                },
+                icon: const Icon(Icons.login),
+                label: const Text('Se connecter'),
+                style: FilledButton.styleFrom(
+                  backgroundColor: const Color(0xFF6B4423),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 32,
+                    vertical: 16,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       );
     }
@@ -157,7 +216,7 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
             const SizedBox(height: 24),
 
-            // Section badges (à venir)
+            // Section badges
             Card(
               child: Padding(
                 padding: const EdgeInsets.all(16),
@@ -165,24 +224,43 @@ class _ProfilePageState extends State<ProfilePage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Icon(Icons.emoji_events, color: Color(0xFF6B4423)),
-                        const SizedBox(width: 8),
+                        Row(
+                          children: [
+                            const Icon(Icons.emoji_events, color: Color(0xFF6B4423)),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Badges',
+                              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                            ),
+                          ],
+                        ),
                         Text(
-                          'Badges',
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
+                          '${_badges.where((b) => b.isUnlocked).length}/${_badges.length}',
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ],
                     ),
                     const SizedBox(height: 16),
-                    Center(
-                      child: Text(
-                        'Système de badges à venir...',
-                        style: TextStyle(color: Colors.grey[600]),
-                      ),
-                    ),
+                    if (_loadingBadges)
+                      const Center(
+                        child: CircularProgressIndicator(),
+                      )
+                    else if (_badges.isEmpty)
+                      Center(
+                        child: Text(
+                          'Aucun badge disponible',
+                          style: TextStyle(color: Colors.grey[600]),
+                        ),
+                      )
+                    else
+                      BadgeGrid(badges: _badges),
                   ],
                 ),
               ),

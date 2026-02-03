@@ -27,9 +27,13 @@ class DatabaseService {
     if (_isInitialized) return;
 
     try {
+      print('🔍 SUPABASE_URL: ${_supabaseUrl.isEmpty ? "VIDE!" : "OK (${_supabaseUrl.length} caractères)"}');
+      print('🔍 SUPABASE_ANON_KEY: ${_supabaseAnonKey.isEmpty ? "VIDE!" : "OK (${_supabaseAnonKey.length} caractères)"}');
+      
       if (_supabaseUrl.isEmpty || _supabaseAnonKey.isEmpty) {
         throw Exception(
-          'SUPABASE_URL et SUPABASE_ANON_KEY doivent être définis via --dart-define-from-file=.env',
+          'SUPABASE_URL et SUPABASE_ANON_KEY doivent être définis via --dart-define-from-file=.env\n'
+          'Lancez avec: flutter run --dart-define-from-file=.env',
         );
       }
 

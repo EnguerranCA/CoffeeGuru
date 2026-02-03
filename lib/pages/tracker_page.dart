@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../models/coffee_log.dart';
 import '../services/coffee_service.dart';
+import '../services/badge_service.dart';
 import '../widgets/add_coffee_dialog.dart';
 import '../widgets/caffeine_progress_bar.dart';
+import '../widgets/badge_notification.dart';
 
 class TrackerPage extends StatefulWidget {
   const TrackerPage({super.key});
@@ -14,6 +16,7 @@ class TrackerPage extends StatefulWidget {
 
 class _TrackerPageState extends State<TrackerPage> {
   final CoffeeService _coffeeService = CoffeeService();
+  final BadgeService _badgeService = BadgeService();
   bool _isLoading = true;
 
   @override
@@ -31,6 +34,20 @@ class _TrackerPageState extends State<TrackerPage> {
     }
   }
 
+  Future<void> _checkNewBadges() async {
+    final newBadges = await _badgeService.checkNewlyUnlockedBadges();
+    
+    if (mounted && newBadges.isNotEmpty) {
+      // Afficher une notification pour chaque nouveau badge
+      for (var badge in newBadges) {
+        await Future.delayed(const Duration(milliseconds: 500));
+        if (mounted) {
+          BadgeUnlockedNotification.show(context, badge);
+        }
+      }
+    }
+  }
+
   Future<void> _showAddCoffeeDialog() async {
     final result = await showDialog<CoffeeLog>(
       context: context,
@@ -42,6 +59,10 @@ class _TrackerPageState extends State<TrackerPage> {
       
       if (addedLog != null && mounted) {
         setState(() {});
+        
+        // Vérifier les nouveaux badges débloqués
+        _checkNewBadges();
+        
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('${result.type.emoji} ${result.type.displayName} ajouté !'),
