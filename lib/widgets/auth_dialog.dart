@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
+import '../services/database_service.dart';
 
 /// Dialog pour se connecter ou créer un compte
 class AuthDialog extends StatefulWidget {
@@ -60,9 +61,11 @@ class _AuthDialogState extends State<AuthDialog> {
       } else {
         setState(() {
           _isLoading = false;
-          _errorMessage = _isSignup
-              ? 'Ce nom d\'utilisateur est déjà pris'
-              : 'Identifiants incorrects';
+          // Utiliser le message d'erreur spécifique du service
+          _errorMessage = authService.lastError ?? 
+              (_isSignup
+                  ? 'Erreur lors de la création du compte'
+                  : 'Identifiants incorrects');
         });
       }
     }
@@ -70,11 +73,16 @@ class _AuthDialogState extends State<AuthDialog> {
 
   @override
   Widget build(BuildContext context) {
+    // Vérifier si la base de données est initialisée
+    final dbInitialized = DatabaseService().isInitialized;
+    
     return Dialog(
       child: Container(
         padding: const EdgeInsets.all(24),
         constraints: const BoxConstraints(maxWidth: 400),
-        child: Form(
+        child: !dbInitialized
+            ? _buildDatabaseErrorView(context)
+            : Form(
           key: _formKey,
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -207,6 +215,44 @@ class _AuthDialogState extends State<AuthDialog> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildDatabaseErrorView(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const Icon(
+          Icons.error_outline,
+          size: 64,
+          color: Colors.red,
+        ),
+        const SizedBox(height: 16),
+        const Text(
+          'Base de données non disponible',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 16),
+        const Text(
+          'L\'application n\'a pas pu se connecter à la base de données.\n\n'
+          'Assurez-vous que l\'app a été lancée avec:\n'
+          'flutter run --dart-define-from-file=.env',
+          style: TextStyle(fontSize: 14),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 24),
+        FilledButton(
+          onPressed: () => Navigator.of(context).pop(false),
+          style: FilledButton.styleFrom(
+            backgroundColor: const Color(0xFF6B4423),
+          ),
+          child: const Text('Fermer'),
+        ),
+      ],
     );
   }
 }

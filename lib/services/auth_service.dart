@@ -13,6 +13,7 @@ class AuthService {
   
   User? _currentUser;
   bool _isGuest = true;
+  String? _lastError; // Pour stocker le dernier message d'erreur
   
   // Clés pour SharedPreferences
   static const String _userIdKey = 'current_user_id';
@@ -88,9 +89,19 @@ class AuthService {
   bool get isGuest => _isGuest;
   bool get isAuthenticated => !_isGuest && _currentUser != null;
   String get currentUserId => _currentUser?.id ?? guestUserId;
+  String? get lastError => _lastError;
 
   /// Connexion avec username et password
   Future<bool> login(String username, String password) async {
+    _lastError = null;
+    
+    // Vérifier que la base de données est initialisée
+    if (!_db.isInitialized) {
+      _lastError = 'Base de données non disponible. Veuillez redémarrer l\'application.';
+      print('❌ DatabaseService non initialisé lors de la tentative de login');
+      return false;
+    }
+    
     try {
       // Rechercher l'utilisateur par username
       final response = await _db.client
@@ -100,12 +111,14 @@ class AuthService {
           .maybeSingle();
 
       if (response == null) {
+        _lastError = 'Utilisateur non trouvé';
         return false; // Utilisateur non trouvé
       }
 
       // Vérifier le mot de passe hashé
       final storedHash = response['password_hash'] as String?;
       if (storedHash == null || !BCrypt.checkpw(password, storedHash)) {
+        _lastError = 'Mot de passe incorrect';
         return false; // Mot de passe incorrect
       }
 
@@ -121,12 +134,22 @@ class AuthService {
       return true;
     } catch (e) {
       print('❌ Erreur lors de la connexion: $e');
+      _lastError = 'Erreur de connexion: $e';
       return false;
     }
   }
 
   /// Inscription (créer un nouveau compte)
   Future<bool> signup(String username, String password) async {
+    _lastError = null;
+    
+    // Vérifier que la base de données est initialisée
+    if (!_db.isInitialized) {
+      _lastError = 'Base de données non disponible. Veuillez redémarrer l\'application.';
+      print('❌ DatabaseService non initialisé lors de la tentative de signup');
+      return false;
+    }
+    
     try {
       print('🔍 Vérification si le username "$username" existe déjà...');
       
@@ -141,6 +164,7 @@ class AuthService {
       
       if (existing != null) {
         print('❌ Username "$username" déjà pris');
+        _lastError = 'Ce nom d\'utilisateur est déjà pris';
         return false; // Username déjà pris
       }
 
@@ -160,6 +184,7 @@ class AuthService {
 
       if (userData == null) {
         print('❌ Échec de la création de l\'utilisateur');
+        _lastError = 'Échec de la création du compte';
         return false;
       }
 
@@ -177,6 +202,13 @@ class AuthService {
       return true;
     } catch (e) {
       print('❌ Erreur lors de l\'inscription: $e');
+      _lastError = 'Erreur lors de l\'inscription: ${e.toString()}';
+      
+      // Si c'est une erreur de contrainte unique de Postgres
+      if (e.toString().contains('duplicate key') || e.toString().contains('unique constraint')) {
+        _lastError = 'Ce nom d\'utilisateur est déjà pris';
+      }
+      
       return false;
     }
   }

@@ -16,6 +16,7 @@ class _LeaderboardPageState extends State<LeaderboardPage> with SingleTickerProv
   
   late TabController _tabController;
   bool _isLoading = true;
+  bool _hasShownAuthDialog = false; // Pour éviter de réafficher le dialog
   
   List<LeaderboardEntry> _consumptionLeaderboard = [];
   List<LeaderboardEntry> _placesLeaderboard = [];
@@ -35,11 +36,12 @@ class _LeaderboardPageState extends State<LeaderboardPage> with SingleTickerProv
   }
 
   void _checkAuth() {
-    if (_authService.isGuest) {
+    if (_authService.isGuest && !_hasShownAuthDialog) {
+      _hasShownAuthDialog = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _showAuthDialog();
       });
-    } else {
+    } else if (!_authService.isGuest) {
       _loadLeaderboards();
     }
   }
@@ -54,9 +56,9 @@ class _LeaderboardPageState extends State<LeaderboardPage> with SingleTickerProv
     if (result == true && mounted) {
       setState(() {});
       _loadLeaderboards();
-    } else if (!(result ?? false) && mounted) {
-      Navigator.of(context).pop();
     }
+    // Si annulé (result == false ou null), on reste sur la page
+    // Le flag _hasShownAuthDialog empêchera de réafficher le dialog
   }
 
   Future<void> _loadLeaderboards() async {
@@ -93,8 +95,42 @@ class _LeaderboardPageState extends State<LeaderboardPage> with SingleTickerProv
           title: const Text('Classement'),
           centerTitle: true,
         ),
-        body: const Center(
-          child: CircularProgressIndicator(),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.leaderboard,
+                size: 80,
+                color: Colors.grey[400],
+              ),
+              const SizedBox(height: 24),
+              Text(
+                'Connectez-vous pour voir le classement',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.grey[600],
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              FilledButton.icon(
+                onPressed: () {
+                  setState(() => _hasShownAuthDialog = false);
+                  _showAuthDialog();
+                },
+                icon: const Icon(Icons.login),
+                label: const Text('Se connecter'),
+                style: FilledButton.styleFrom(
+                  backgroundColor: const Color(0xFF6B4423),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 32,
+                    vertical: 16,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       );
     }
