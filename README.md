@@ -117,6 +117,10 @@ lib/
 Clés potentiellement nécessaires :
 - Supabase URL et Anon Key pour le dev
 
+## 🎥 Vidéo de demo
+[Voir la vidéo de démonstration](https://youtu.be/tWpRXO0NRac)
+
+
 ## 📸 Screenshots
 
 ### 🗺️ Coffee Map
@@ -180,3 +184,13 @@ flutter test
 
 ### Commits
 - Messages en français si possible
+
+
+**Vérification avant rendu** :
+- [x] Le dépôt est accessible (public ou accès donné)
+- [ ] Le README est complet
+- [ ] L'application builde et run sans erreur
+- [x] Au moins 2 Pull Requests reviewées par membre sont visibles
+- [x] Toutes les contraintes de l'orientation choisie sont respectées
+- [ ] La vidéo est accessible et complète
+- [x] Pas de fichiers sensibles commitées (clés API, .env)
