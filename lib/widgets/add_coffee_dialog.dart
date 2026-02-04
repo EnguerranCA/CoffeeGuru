@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/coffee_log.dart';
 import '../models/cafe_place.dart' show Cafe;
 import '../services/auth_service.dart';
+import '../services/coffee_service.dart';
 import 'cafe_place_search.dart';
 
 class AddCoffeeDialog extends StatefulWidget {

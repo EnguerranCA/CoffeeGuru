@@ -1,5 +1,9 @@
 # Coffee Guru ☕
 
+## 👥 Équipe
+- Gilian Cannier gilian.cannier@etu.unilim.fr
+- Enguerran Caro--Alquier enguerran.caroalquier@etu.unilim.fr
+
 ## 📱 Description
 Coffee Guru est une application mobile dédiée aux amateurs de café. Elle permet de découvrir des cafés à proximité via une carte interactive, de suivre sa consommation quotidienne de café, de comparer ses statistiques avec d'autres utilisateurs dans un classement, et de gérer son profil avec un système de badges d'accomplissement.
 
@@ -9,12 +13,11 @@ Coffee Guru est une application mobile dédiée aux amateurs de café. Elle perm
 ## ✅ Contraintes respectées
 
 ### Fonctionnel 
-- [ ] Stockage persistant (SharedPreferences/Hive/SQLite ou Firebase/Supabase)
-- [ ] Package pub.dev pertinent (maps, charts, etc.)
+- [X] Stockage persistant (Supabase)
+- [X] Package pub.dev pertinent (fluttermaps, geolocator, etc.)
 
 ### Design
 - [ ] Animations (Hero, AnimatedContainer, rotation des badges, etc.)
-- [ ] Mode light et dark avec switch dans paramètres
 
 ## 🚀 Installation
 
@@ -26,7 +29,7 @@ Coffee Guru est une application mobile dédiée aux amateurs de café. Elle perm
 ### Étapes
 ```bash
 # Cloner le repository
-git clone [URL_DU_REPO]
+git clone https://github.com/enguerranCA/CoffeeGuru.git
 
 # Installer les dépendances
 cd flutter_application_1
@@ -64,9 +67,8 @@ lib/
 ### 🚧 En cours / À venir
 
 #### Coffee Map
-- [ ] Afficher une carte interactive des cafés à proximité
-- [ ] Filtrer les cafés selon les recettes et le type de point de vente (cafés, distributeurs, bars, etc.)
-- [ ] Avis sur les cafés avec notes et commentaires
+- [X] Afficher une carte interactive des cafés à proximité
+- [X] Filtrer les cafés selon les recettes et le type de point de vente (cafés, distributeurs, bars, etc.)
 
 #### Coffee Tracker
 - [x] Suivi de la consommation de café (log quand on prend un café : où, type, heure)
@@ -82,7 +84,7 @@ lib/
 
 #### Profil
 - [ ] Création et gestion de profil utilisateur
-- [ ] Badges des avancements de cafés (ex: "Caf'explorateur", "Latte Gourou", "Décaféiné")
+- [X] Badges des avancements de cafés (ex: "Caf'explorateur", "Latte Gourou", "Décaféiné")
 - [ ] Animation de rotation des badges
 
 ## 🎨 Design
