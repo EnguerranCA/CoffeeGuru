@@ -264,13 +264,13 @@ Tests unitaires et widgets significatifs (minimum 5 à 10 tests par catégorie) 
 3. **Aucune archive ZIP** : tout doit être sur GitHub
 
 **Vérification avant rendu** :
-- [ ] Le dépôt est accessible (public ou accès donné)
-- [ ] Le README est complet
-- [ ] L'application builde et run sans erreur
-- [ ] Au moins 2 Pull Requests reviewées par membre sont visibles
-- [ ] Toutes les contraintes de l'orientation choisie sont respectées
-- [ ] La vidéo est accessible et complète
-- [ ] Pas de fichiers sensibles commitées (clés API, .env)
+- [x] Le dépôt est accessible (public ou accès donné)
+- [x] Le README est complet
+- [x] L'application builde et run sans erreur 
+- [x] Au moins 2 Pull Requests reviewées par membre sont visibles
+- [x] Toutes les contraintes de l'orientation choisie sont respectées
+- [x] La vidéo est accessible et complète
+- [x] Pas de fichiers sensibles commitées (clés API, .env)
 
 ---
 

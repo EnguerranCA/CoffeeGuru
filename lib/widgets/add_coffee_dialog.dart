@@ -143,31 +143,31 @@ class _AddCoffeeDialogState extends State<AddCoffeeDialog> {
               ),
             ),
             
-            // Affichage de la caféine sélectionnée
-            const SizedBox(height: 8),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(
-                color: Colors.blue.shade50,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.blue.shade200),
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.info_outline, size: 16, color: Colors.blue.shade700),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      'Ce café contient ${_selectedType.caffeinemg} mg de caféine',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.blue.shade700,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            // Affichage de la caféine sélectionnée (obsolète)
+            // const SizedBox(height: 8),
+            // Container(
+            //   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            //   decoration: BoxDecoration(
+            //     color: Colors.blue.shade50,
+            //     borderRadius: BorderRadius.circular(8),
+            //     border: Border.all(color: Colors.blue.shade200),
+            //   ),
+            //   child: Row(
+            //     children: [
+            //       Icon(Icons.info_outline, size: 16, color: Colors.blue.shade700),
+            //       const SizedBox(width: 8),
+            //       Expanded(
+            //         child: Text(
+            //           'Ce café contient ${_selectedType.caffeinemg} mg de caféine',
+            //           style: TextStyle(
+            //             fontSize: 12,
+            //             color: Colors.blue.shade700,
+            //           ),
+            //         ),
+            //       ),
+            //     ],
+            //   ),
+            // ),
             const SizedBox(height: 16),
             
             // Sélection du lieu

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import '../models/coffee_log.dart';
 import '../services/coffee_service.dart';
 import '../services/badge_service.dart';
@@ -22,7 +23,13 @@ class _TrackerPageState extends State<TrackerPage> {
   @override
   void initState() {
     super.initState();
-    _loadLogs();
+    _initializePage();
+  }
+
+  Future<void> _initializePage() async {
+    // Initialiser le formatage de date pour le français
+    await initializeDateFormatting('fr_FR', null);
+    await _loadLogs();
   }
 
   Future<void> _loadLogs() async {
@@ -63,6 +70,12 @@ class _TrackerPageState extends State<TrackerPage> {
         // Vérifier les nouveaux badges débloqués
         _checkNewBadges();
         
+        // Vérifier si la limite de caféine est atteinte
+        final todayCaffeine = _coffeeService.getTodayCaffeine();
+        if (todayCaffeine >= 400) {
+          _showCaffeineLimitWarning(todayCaffeine);
+        }
+        
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('${result.type.emoji} ${result.type.displayName} ajouté !'),
@@ -78,6 +91,71 @@ class _TrackerPageState extends State<TrackerPage> {
         );
       }
     }
+  }
+
+  Future<void> _showCaffeineLimitWarning(int caffeine) async {
+    await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFFF5E6D3),
+        icon: const Icon(
+          Icons.warning_amber_rounded,
+          color: Colors.orange,
+          size: 60,
+        ),
+        title: const Text(
+          '⚠️ Limite de caféine atteinte',
+          style: TextStyle(
+            color: Color(0xFF6B4423),
+            fontWeight: FontWeight.bold,
+          ),
+          textAlign: TextAlign.center,
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Vous avez consommé $caffeine mg de caféine aujourd\'hui.',
+              style: const TextStyle(
+                color: Color(0xFF6B4423),
+                fontSize: 16,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.orange.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.orange, width: 2),
+              ),
+              child: const Text(
+                '⚕️ La limite recommandée est de 400 mg par jour.\n\nUne consommation excessive peut causer de l\'anxiété, des troubles du sommeil et des palpitations.',
+                style: TextStyle(
+                  color: Color(0xFF6B4423),
+                  fontSize: 14,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text(
+              'J\'ai compris',
+              style: TextStyle(
+                color: Color(0xFF6B4423),
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _deleteCoffeeLog(String id) async {

@@ -1,5 +1,9 @@
 # Coffee Guru ☕
 
+## 👥 Équipe
+- Gilian Cannier gilian.cannier@etu.unilim.fr
+- Enguerran Caro--Alquier enguerran.caroalquier@etu.unilim.fr
+
 ## 📱 Description
 Coffee Guru est une application mobile dédiée aux amateurs de café. Elle permet de découvrir des cafés à proximité via une carte interactive, de suivre sa consommation quotidienne de café, de comparer ses statistiques avec d'autres utilisateurs dans un classement, et de gérer son profil avec un système de badges d'accomplissement.
 
@@ -9,49 +13,63 @@ Coffee Guru est une application mobile dédiée aux amateurs de café. Elle perm
 ## ✅ Contraintes respectées
 
 ### Fonctionnel 
-- [ ] Stockage persistant (SharedPreferences/Hive/SQLite ou Firebase/Supabase)
-- [ ] Package pub.dev pertinent (maps, charts, etc.)
+- [X] Stockage persistant (Supabase)
+- [X] Package pub.dev pertinent (fluttermaps, geolocator, etc.)
 
 ### Design
-- [ ] Animations (Hero, AnimatedContainer, rotation des badges, etc.)
-- [ ] Mode light et dark avec switch dans paramètres
+- [x] Animations (rotation des badges, popup de badges, clic sur les filtres, chargements, etc.)
+- [x] Utilisation d'**images** (icones, illustrations) de manière cohérente
 
 ## 🚀 Installation
 
 ### Prérequis
-- Flutter SDK (^3.7.2)
-- Dart SDK
-- Un émulateur Android/iOS ou un appareil physique
+- Flutter SDK
+- Android studio
 
 ### Étapes
 ```bash
 # Cloner le repository
-git clone [URL_DU_REPO]
+git clone https://github.com/enguerranCA/CoffeeGuru.git
 
 # Installer les dépendances
 cd flutter_application_1
 flutter pub get
 
 # Lancer l'application
-flutter run
+flutter run --dart-define-from-file=.env
+# ou utiliser Run and Debug dans VS Code et lancer flutter_application_1
 ```
 
 ## 🏗️ Structure du projet
 
 ```
 lib/
-├── main.dart                  # Point d'entrée avec navigation
-├── models/                    # Modèles de données
-│   └── (à venir)
-├── pages/                     # Pages de l'application
-│   ├── map_page.dart         # Carte des cafés
-│   ├── tracker_page.dart     # Suivi de consommation
-│   ├── leaderboard_page.dart # Classement
-│   └── profile_page.dart     # Profil utilisateur
-├── services/                  # Services (API, stockage)
-│   └── (à venir)
-└── widgets/                   # Widgets réutilisables
-    └── (à venir)
+├── main.dart                       # Point d'entrée avec navigation
+├── models/                         # Modèles de données
+│   ├── badge.dart                  # Modèle des badges d'accomplissement
+│   ├── cafe_place.dart             # Modèle des cafés/établissements
+│   ├── coffee_log.dart             # Modèle des logs de consommation
+│   └── user.dart                   # Modèle utilisateur
+├── pages/                          # Pages de l'application
+│   ├── map_page.dart               # Carte des cafés avec filtres
+│   ├── tracker_page.dart           # Suivi de consommation et statistiques
+│   ├── leaderboard_page.dart       # Classement des utilisateurs
+│   └── profile_page.dart           # Profil utilisateur et badges
+├── services/                       # Services (API, stockage, logique métier)
+│   ├── auth_service.dart           # Authentification et gestion utilisateur
+│   ├── badge_service.dart          # Gestion et déblocage des badges
+│   ├── cafe_service.dart           # Gestion des cafés et établissements
+│   ├── coffee_service.dart         # Gestion des logs de consommation
+│   ├── database_service.dart       # Communication avec Supabase
+│   ├── geocoding_service.dart      # Services de géolocalisation
+│   └── leaderboard_service.dart    # Gestion du classement
+└── widgets/                        # Widgets réutilisables
+    ├── add_coffee_dialog.dart      # Dialog d'ajout de café
+    ├── auth_dialog.dart            # Dialog de connexion/inscription
+    ├── badge_display.dart          # Affichage des badges
+    ├── badge_notification.dart     # Notification de nouveau badge
+    ├── cafe_place_search.dart      # Recherche d'établissements
+    └── caffeine_progress_bar.dart  # Barre de progression de caféine
 ```
 
 ## 📋 Fonctionnalités
@@ -61,19 +79,18 @@ lib/
 - [x] Structure de base des pages
 - [x] Thème personnalisé (beige et marron)
 
-### 🚧 En cours / À venir
+### 🚧 Tâches en cours
 
 #### Coffee Map
-- [ ] Afficher une carte interactive des cafés à proximité
-- [ ] Filtrer les cafés selon les recettes et le type de point de vente (cafés, distributeurs, bars, etc.)
-- [ ] Avis sur les cafés avec notes et commentaires
+- [x] Afficher une carte interactive des cafés à proximité
+- [x] Filtrer les cafés selon les recettes et le type de point de vente (cafés, distributeurs, bars, etc.)
 
 #### Coffee Tracker
 - [x] Suivi de la consommation de café (log quand on prend un café : où, type, heure)
 - [x] Statistiques personnelles sur la consommation (fréquence, types préférés)
 - [x] Visualisation comme une app de temps d'écran
 - [x] Visualisation de la limite recommandée de consommation de caféine
-- [ ] Popup quand la limite de café est atteinte
+- [x] Popup quand la limite de café est atteinte
 
 #### Leaderboard Coffee Lovers
 - [x] Comparaison de la consommation entre utilisateurs
@@ -81,9 +98,9 @@ lib/
 - [x] Classement des recettes goûtées
 
 #### Profil
-- [ ] Création et gestion de profil utilisateur
-- [ ] Badges des avancements de cafés (ex: "Caf'explorateur", "Latte Gourou", "Décaféiné")
-- [ ] Animation de rotation des badges
+- [x] Création et gestion de profil utilisateur
+- [x] Badges des avancements de cafés (ex: "Caf'explorateur", "Latte Gourou", "Décaféiné")
+- [x] Animation de rotation des badges
 
 ## 🎨 Design
 
@@ -94,20 +111,57 @@ lib/
 
 **Logo** : `logo-coffee-guru.png`
 
-**Template Dribbble** : [Lien à ajouter]
 
 ## 🔑 API/Credentials
 
-_Instructions pour les clés API seront ajoutées lors de l'intégration_
-
 Clés potentiellement nécessaires :
-- Google Maps API (pour la carte)
-- Google Places API (pour les cafés à proximité)
-- Firebase (si utilisé pour le backend)
+- Supabase URL et Anon Key pour le dev
+
+## 🎥 Vidéo de demo
+[Voir la vidéo de démonstration](https://youtu.be/tWpRXO0NRac)
+
 
 ## 📸 Screenshots
 
-_Screenshots à venir après développement des fonctionnalités_
+### 🗺️ Coffee Map
+Carte interactive affichant les cafés à proximité avec filtres par type d'établissement et recettes disponibles.
+
+![Coffee Map](captures/1%20map.png)
+
+### 📍 Détails d'un café
+Informations détaillées d'un établissement avec distance, adresse et types de café disponibles.
+
+![Description café](captures/2%20description%20cafe.png)
+
+### 🏆 Leaderboard
+Classement des utilisateurs par nombre de cafés consommés, lieux visités et recettes goûtées.
+
+![Leaderboard](captures/3%20leaderboard.png)
+
+### 👤 Profil utilisateur
+Page profil avec statistiques personnelles et collection de badges d'accomplissement.
+
+![Page profil](captures/4%20page%20profil.png)
+
+### 🎖️ Badge débloqué
+Notification animée lors du déblocage d'un nouveau badge avec rotation 3D.
+
+![Badge](captures/5%20badge.png)
+
+### ☕ Coffee Tracker
+Suivi quotidien de la consommation de café avec barre de progression de caféine et historique par date.
+
+![Tracker](captures/6%20tracker.png)
+
+### 🔍 Recherche d'établissement
+Modale de recherche permettant de trouver et sélectionner un café lors de l'ajout d'une consommation.
+
+![Recherche de lieu](captures/7%20recherche%20de%20lieu%20dans%20la%20modale%20tracker.png)
+
+### ➕ Ajout de café
+Formulaire d'ajout d'une consommation avec sélection du type de café, lieu et date/heure.
+
+![Modale du tracker](captures/8%20modale%20du%20tracker.png)
 
 ## 🧪 Tests
 
@@ -116,62 +170,27 @@ _Screenshots à venir après développement des fonctionnalités_
 flutter test
 ```
 
-_Tests à implémenter_
 
 ## 📝 Difficultés rencontrées
 
-_Section à compléter au fur et à mesure du développement_
-
-1. 
-2. 
-3. 
+1. La mise en place de Flutter map car au début il y avait des problèmes de chargements et de race conditions avec le cahrgement des lieux notamment.
+2. Gestion de la base de données Supabase et les migrations que nous avons dû faire manuellement et qu'il était compliqué de comprendre surtout au début.
 
 ## 🔄 Workflow Git
 
 ### Branches
-- `main` : Branche principale (code stable, protégée)
-- `develop` : Branche de développement
+- `main` : Branche principale
 - `feature/nom-feature` : Branches pour chaque fonctionnalité
 
-### Processus de Pull Request
-1. Créer une branche depuis `develop` : `git checkout -b feature/ma-fonctionnalite`
-2. Développer la fonctionnalité avec commits réguliers
-3. Push de la branche : `git push origin feature/ma-fonctionnalite`
-4. Créer une Pull Request vers `develop` sur GitHub
-5. **Code review obligatoire** par l'autre membre
-6. Appliquer les modifications demandées si nécessaire
-7. Merge après validation (minimum 3 PR reviewées par membre)
-
 ### Commits
-- Messages en français
-- Format : `type: description courte`
-- Types : `feat`, `fix`, `docs`, `style`, `refactor`, `test`
+- Messages en français si possible
 
-Exemples :
-```
-feat: ajoute la page de carte avec Google Maps
-fix: corrige le calcul de caféine dans le tracker
-docs: met à jour le README avec les instructions d'installation
-```
 
-## 📦 Dépendances actuelles
-
-```yaml
-dependencies:
-  flutter:
-    sdk: flutter
-  font_awesome_flutter: ^10.9.1
-  dio: ^5.9.0
-  google_fonts: ^6.3.2
-  share_plus: ^12.0.1
-  url_launcher: ^6.3.2
-```
-
-_Dépendances à ajouter selon les besoins_
-
----
-
-**Version** : 0.1.0  
-**Date de création** : Janvier 2026  
-**Cours** : TP5 - Projet Flutter en binôme
-
+**Vérification avant rendu** :
+- [x] Le dépôt est accessible (public ou accès donné)
+- [ ] Le README est complet
+- [ ] L'application builde et run sans erreur
+- [x] Au moins 2 Pull Requests reviewées par membre sont visibles
+- [x] Toutes les contraintes de l'orientation choisie sont respectées
+- [ ] La vidéo est accessible et complète
+- [x] Pas de fichiers sensibles commitées (clés API, .env)

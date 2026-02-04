@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
@@ -20,11 +21,14 @@ class _MapPageState extends State<MapPage> {
   LatLng _currentLocation = const LatLng(48.8566, 2.3522); // Paris par défaut
   List<Cafe> _cafes = [];
   bool _isLoading = true;
+  bool _hasUserLocation = false; // Indique si la position a été récupérée
+  bool _mapReady = false; // Indique si la carte est prête
   String? _errorMessage;
   
   // Filtres
-  Set<CafeType> _selectedCafeTypes = {};
-  Set<CoffeeType> _selectedCoffeeTypes = {};
+  Set<CafeType> _selectedCafeTypes = Set.from(CafeType.values); // Tous sélectionnés par défaut
+  Set<CoffeeType> _selectedCoffeeTypes = {}; // Aucun sélectionné par défaut
+  double _maxDistanceKm = 10.0; // Distance max en km
 
   @override
   void initState() {
@@ -34,7 +38,10 @@ class _MapPageState extends State<MapPage> {
 
   /// Initialise la carte : récupère la position et charge les cafés
   Future<void> _initializeMap() async {
-    await _getCurrentLocation();
+    // Lancer la récupération de position en arrière-plan (sans attendre)
+    _getCurrentLocation();
+    
+    // Charger immédiatement les cafés avec la position par défaut
     await _loadCafes();
   }
 
@@ -46,43 +53,64 @@ class _MapPageState extends State<MapPage> {
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
         if (permission == LocationPermission.denied) {
-          if (mounted) {
-            setState(() {
-              _errorMessage = 'Permission de localisation refusée';
-            });
-          }
+          setState(() {
+            _errorMessage = 'Permission de localisation refusée';
+          });
           return;
         }
       }
 
       if (permission == LocationPermission.deniedForever) {
-        if (mounted) {
-          setState(() {
-            _errorMessage = 'Permission de localisation refusée définitivement';
-          });
-        }
+        setState(() {
+          _errorMessage = 'Permission de localisation refusée définitivement';
+        });
         return;
       }
 
-      // Récupérer la position
-      Position position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
-      );
+      // 1. Utiliser d'abord la dernière position connue (instantané)
+      Position? lastKnown = await Geolocator.getLastKnownPosition();
+      if (lastKnown != null) {
+        setState(() {
+          _currentLocation = LatLng(lastKnown.latitude, lastKnown.longitude);
+          _hasUserLocation = true;
+        });
+        if (_mapReady) {
+          _mapController.move(_currentLocation, 14.0);
+        }
+        // Recharger les cafés avec la nouvelle position
+        _loadCafes();
+      }
 
-      if (mounted) {
+      // 2. Ensuite, récupérer la position précise (en arrière-plan) avec timeout
+      try {
+        Position position = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.medium,
+        ).timeout(
+          const Duration(seconds: 10),
+          onTimeout: () {
+            throw TimeoutException('Position timeout');
+          },
+        );
+
         setState(() {
           _currentLocation = LatLng(position.latitude, position.longitude);
+          _hasUserLocation = true;
         });
 
-        // Centrer la carte sur la position
-        _mapController.move(_currentLocation, 13.0);
+        // Centrer la carte sur la position si elle est prête
+        if (_mapReady) {
+          _mapController.move(_currentLocation, 14.0);
+        }
+        
+        // Recharger les cafés avec la position précise
+        _loadCafes();
+      } on TimeoutException {
+        // Timeout - on garde la position lastKnown
       }
     } catch (e) {
-      if (mounted) {
-        setState(() {
-          _errorMessage = 'Erreur de localisation: $e';
-        });
-      }
+      setState(() {
+        _errorMessage = 'Erreur de localisation: $e';
+      });
     }
   }
 
@@ -91,19 +119,15 @@ class _MapPageState extends State<MapPage> {
     try {
       await _cafeService.loadCafesFromAPI(_currentLocation);
       final cafes = await _cafeService.getCafesNearby(_currentLocation, radiusKm: 10);
-      if (mounted) {
-        setState(() {
-          _cafes = cafes;
-          _isLoading = false;
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _errorMessage = 'Erreur de chargement des cafés: $e';
-          _isLoading = false;
-        });
-      }
+      setState(() {
+        _cafes = cafes;
+        _isLoading = false;
+      });
+    } catch (e, stackTrace) {
+      setState(() {
+        _errorMessage = 'Erreur de chargement des cafés: $e';
+        _isLoading = false;
+      });
     }
   }
 
@@ -111,102 +135,197 @@ class _MapPageState extends State<MapPage> {
   Future<void> _applyFilters() async {
     List<Cafe> filteredCafes = await _cafeService.getAllCafes();
     
-    if (mounted) {
-      setState(() {
-        // Filtre par type d'établissement
-        if (_selectedCafeTypes.isNotEmpty) {
-          filteredCafes = _cafeService.filterByType(_selectedCafeTypes.toList());
-        }
-        
-        // Filtre par type de café
-        if (_selectedCoffeeTypes.isNotEmpty) {
-          filteredCafes = filteredCafes.where((cafe) =>
-            cafe.availableCoffeeTypes.any((type) => _selectedCoffeeTypes.contains(type))
-          ).toList();
-        }
-        
-        _cafes = filteredCafes;
-      });
-    }
+    setState(() {
+      // Filtre par distance
+      if (_hasUserLocation) {
+        filteredCafes = filteredCafes.where((cafe) =>
+          cafe.distanceFrom(_currentLocation) <= _maxDistanceKm
+        ).toList();
+      }
+      
+      // Filtre par type d'établissement (seulement si pas tout sélectionné)
+      if (_selectedCafeTypes.length < CafeType.values.length) {
+        filteredCafes = filteredCafes.where((cafe) =>
+          _selectedCafeTypes.contains(cafe.type)
+        ).toList();
+      }
+      
+      // Filtre par type de café (seulement si au moins un type est sélectionné)
+      if (_selectedCoffeeTypes.isNotEmpty) {
+        filteredCafes = filteredCafes.where((cafe) {
+          // Le café doit avoir au moins un des types sélectionnés
+          return cafe.availableCoffeeTypes.any((type) => _selectedCoffeeTypes.contains(type));
+        }).toList();
+      }
+      
+      _cafes = filteredCafes;
+    });
   }
 
   /// Affiche le dialog de filtres
   void _showFiltersDialog() {
+    // Variables locales pour le dialog
+    double tempDistance = _maxDistanceKm;
+    Set<CafeType> tempCafeTypes = Set.from(_selectedCafeTypes);
+    Set<CoffeeType> tempCoffeeTypes = Set.from(_selectedCoffeeTypes);
+    
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFFF5E6D3),
-        title: const Text(
-          'Filtres',
-          style: TextStyle(color: Color(0xFF6B4423)),
-        ),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Filtres par type d'établissement
-              const Text(
-                'Type d\'établissement',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF6B4423),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          backgroundColor: const Color(0xFFF5E6D3),
+          title: const Text(
+            'Filtres',
+            style: TextStyle(color: Color(0xFF6B4423)),
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Filtre par distance
+                const Text(
+                  '📍 Distance maximale',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF6B4423),
+                  ),
                 ),
-              ),
-              const SizedBox(height: 8),
-              Wrap(
-                spacing: 8,
-                children: CafeType.values.map((type) {
-                  final isSelected = _selectedCafeTypes.contains(type);
-                  return FilterChip(
-                    label: Text('${type.emoji} ${type.displayName}'),
-                    selected: isSelected,
-                    onSelected: (selected) {
-                      setState(() {
-                        if (selected) {
-                          _selectedCafeTypes.add(type);
-                        } else {
-                          _selectedCafeTypes.remove(type);
-                        }
-                      });
-                    },
-                    selectedColor: const Color(0xFF6B4423).withOpacity(0.3),
-                  );
-                }).toList(),
-              ),
-            ],
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Slider(
+                        value: tempDistance,
+                        min: 1,
+                        max: 50,
+                        divisions: 49,
+                        activeColor: const Color(0xFF6B4423),
+                        onChanged: (value) {
+                          setDialogState(() {
+                            tempDistance = value;
+                          });
+                        },
+                      ),
+                    ),
+                    Container(
+                      width: 60,
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF6B4423).withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        '${tempDistance.round()} km',
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF6B4423),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                
+                // Filtres par type d'établissement
+                const Text(
+                  '🏪 Type d\'établissement',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF6B4423),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 4,
+                  children: CafeType.values.map((type) {
+                    final isSelected = tempCafeTypes.contains(type);
+                    return FilterChip(
+                      label: Text('${type.emoji} ${type.displayName}'),
+                      selected: isSelected,
+                      onSelected: (selected) {
+                        setDialogState(() {
+                          if (selected) {
+                            tempCafeTypes.add(type);
+                          } else {
+                            tempCafeTypes.remove(type);
+                          }
+                        });
+                      },
+                      selectedColor: const Color(0xFF6B4423).withOpacity(0.3),
+                    );
+                  }).toList(),
+                ),
+                const SizedBox(height: 16),
+                
+                // Filtres par type de café
+                const Text(
+                  '☕ Type de café',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF6B4423),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 4,
+                  children: CoffeeType.values.map((type) {
+                    final isSelected = tempCoffeeTypes.contains(type);
+                    return FilterChip(
+                      label: Text('${type.emoji} ${type.displayName}'),
+                      selected: isSelected,
+                      onSelected: (selected) {
+                        setDialogState(() {
+                          if (selected) {
+                            tempCoffeeTypes.add(type);
+                          } else {
+                            tempCoffeeTypes.remove(type);
+                          }
+                        });
+                      },
+                      selectedColor: const Color(0xFF6B4423).withOpacity(0.3),
+                    );
+                  }).toList(),
+                ),
+              ],
+            ),
           ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () async {
-              final allCafes = await _cafeService.getAllCafes();
-              if (mounted) {
-                setState(() {
-                  _selectedCafeTypes.clear();
-                  _selectedCoffeeTypes.clear();
-                  _cafes = allCafes;
+          actions: [
+            TextButton(
+              onPressed: () async {
+                // Réinitialiser les filtres
+                setDialogState(() {
+                  tempDistance = 10.0;
+                  tempCafeTypes = Set.from(CafeType.values);
+                  tempCoffeeTypes = {}; // Aucun type de café sélectionné par défaut
                 });
+              },
+              child: const Text(
+                'Réinitialiser',
+                style: TextStyle(color: Color(0xFF6B4423)),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                setState(() {
+                  _maxDistanceKm = tempDistance;
+                  _selectedCafeTypes = tempCafeTypes;
+                  _selectedCoffeeTypes = tempCoffeeTypes;
+                });
+                _applyFilters();
                 Navigator.pop(context);
-              }
-            },
-            child: const Text(
-              'Réinitialiser',
-              style: TextStyle(color: Color(0xFF6B4423)),
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF6B4423),
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('Appliquer'),
             ),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              _applyFilters();
-              Navigator.pop(context);
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF6B4423),
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('Appliquer'),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -248,19 +367,28 @@ class _MapPageState extends State<MapPage> {
               initialZoom: 13.0,
               minZoom: 3.0,
               maxZoom: 18.0,
+              onMapReady: () {
+                setState(() {
+                  _mapReady = true;
+                });
+                // Centrer sur la position utilisateur si déjà disponible
+                if (_hasUserLocation) {
+                  _mapController.move(_currentLocation, 14.0);
+                }
+              },
             ),
             children: [
               // Tuiles de la carte
               TileLayer(
-                urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                urlTemplate: 'https://a.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png',
                 userAgentPackageName: 'com.example.flutter_application_1',
               ),
               
               // Markers
               MarkerLayer(
                 markers: [
-                  // Marker de la position actuelle
-                  _buildUserLocationMarker(),
+                  // Marker de la position actuelle (si disponible)
+                  if (_hasUserLocation) _buildUserLocationMarker(),
                   
                   // Markers des cafés
                   ..._buildCafeMarkers(),
@@ -272,7 +400,7 @@ class _MapPageState extends State<MapPage> {
           // Indicateur de chargement
           if (_isLoading)
             Container(
-              color: const Color(0xFFF5E6D3).withOpacity(0.9),
+              color: const Color(0xFFF5E6D3).withOpacity(0.5),
               child: const Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
