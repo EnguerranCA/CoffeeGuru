@@ -18,8 +18,16 @@ class CafeService {
   /// Récupère tous les cafés depuis Supabase
   Future<List<Cafe>> getAllCafes() async {
     try {
-      final data = await _db.getAll(DatabaseService.cafePlacesTable);
-      _cachedCafes = data.map((json) => Cafe.fromJson(json)).toList();
+      // Utiliser select avec les relations pour récupérer les available_coffee_types
+      final data = await _db.client
+          .from(DatabaseService.cafePlacesTable)
+          .select('*, available_coffee_types(*)');
+      
+      final cafes = (data as List)
+          .map((json) => Cafe.fromJson(json as Map<String, dynamic>))
+          .toList();
+      
+      _cachedCafes = cafes;
       return _cachedCafes;
     } catch (e) {
       print('❌ Erreur dans CafeService.getAllCafes: $e');

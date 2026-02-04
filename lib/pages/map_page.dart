@@ -27,35 +27,29 @@ class _MapPageState extends State<MapPage> {
   
   // Filtres
   Set<CafeType> _selectedCafeTypes = Set.from(CafeType.values); // Tous sélectionnés par défaut
-  Set<CoffeeType> _selectedCoffeeTypes = Set.from(CoffeeType.values); // Tous sélectionnés par défaut
+  Set<CoffeeType> _selectedCoffeeTypes = {}; // Aucun sélectionné par défaut
   double _maxDistanceKm = 10.0; // Distance max en km
 
   @override
   void initState() {
     super.initState();
-    print('🎬 MapPage: initState démarré');
     _initializeMap();
   }
 
   /// Initialise la carte : récupère la position et charge les cafés
   Future<void> _initializeMap() async {
-    print('🚀 MapPage: _initializeMap démarré');
-    
     // Lancer la récupération de position en arrière-plan (sans attendre)
     _getCurrentLocation();
     
     // Charger immédiatement les cafés avec la position par défaut
     await _loadCafes();
-    print('✅ MapPage: _initializeMap terminé');
   }
 
   /// Récupère la position actuelle de l'utilisateur
   Future<void> _getCurrentLocation() async {
-    print('📍 MapPage: _getCurrentLocation démarré');
     try {
       // Vérifier les permissions
       LocationPermission permission = await Geolocator.checkPermission();
-      print('🔐 MapPage: Permission = $permission');
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
         if (permission == LocationPermission.denied) {
@@ -75,13 +69,11 @@ class _MapPageState extends State<MapPage> {
 
       // 1. Utiliser d'abord la dernière position connue (instantané)
       Position? lastKnown = await Geolocator.getLastKnownPosition();
-      print('📍 MapPage: lastKnown = $lastKnown');
       if (lastKnown != null) {
         setState(() {
           _currentLocation = LatLng(lastKnown.latitude, lastKnown.longitude);
           _hasUserLocation = true;
         });
-        print('📍 MapPage: Position lastKnown définie: $_currentLocation');
         if (_mapReady) {
           _mapController.move(_currentLocation, 14.0);
         }
@@ -96,17 +88,14 @@ class _MapPageState extends State<MapPage> {
         ).timeout(
           const Duration(seconds: 10),
           onTimeout: () {
-            print('⏱️ MapPage: Timeout sur getCurrentPosition, utilisation de lastKnown');
             throw TimeoutException('Position timeout');
           },
         );
-        print('📍 MapPage: Position précise obtenue: ${position.latitude}, ${position.longitude}');
 
         setState(() {
           _currentLocation = LatLng(position.latitude, position.longitude);
           _hasUserLocation = true;
         });
-        print('📍 MapPage: _hasUserLocation = $_hasUserLocation, _currentLocation = $_currentLocation');
 
         // Centrer la carte sur la position si elle est prête
         if (_mapReady) {
@@ -116,7 +105,7 @@ class _MapPageState extends State<MapPage> {
         // Recharger les cafés avec la position précise
         _loadCafes();
       } on TimeoutException {
-        print('⏱️ MapPage: getCurrentPosition a timeout, on garde lastKnown');
+        // Timeout - on garde la position lastKnown
       }
     } catch (e) {
       setState(() {
@@ -127,22 +116,14 @@ class _MapPageState extends State<MapPage> {
 
   /// Charge les cafés depuis le service
   Future<void> _loadCafes() async {
-    print('☕ MapPage: _loadCafes démarré, _isLoading = $_isLoading');
     try {
-      print('🗺️ MapPage: Chargement des cafés depuis position: $_currentLocation');
       await _cafeService.loadCafesFromAPI(_currentLocation);
-      print('🗺️ MapPage: loadCafesFromAPI terminé');
       final cafes = await _cafeService.getCafesNearby(_currentLocation, radiusKm: 10);
-      print('🗺️ MapPage: ${cafes.length} cafés chargés');
-      print('📊 MapPage: AVANT setState - _isLoading = $_isLoading, _cafes.length = ${_cafes.length}');
       setState(() {
         _cafes = cafes;
         _isLoading = false;
       });
-      print('📊 MapPage: APRÈS setState - _isLoading = $_isLoading, _cafes.length = ${_cafes.length}');
     } catch (e, stackTrace) {
-      print('❌ MapPage: Erreur de chargement des cafés: $e');
-      print('📋 Stack trace: $stackTrace');
       setState(() {
         _errorMessage = 'Erreur de chargement des cafés: $e';
         _isLoading = false;
@@ -169,12 +150,10 @@ class _MapPageState extends State<MapPage> {
         ).toList();
       }
       
-      // Filtre par type de café (seulement si pas tout sélectionné)
-      if (_selectedCoffeeTypes.length < CoffeeType.values.length) {
+      // Filtre par type de café (seulement si au moins un type est sélectionné)
+      if (_selectedCoffeeTypes.isNotEmpty) {
         filteredCafes = filteredCafes.where((cafe) {
-          // Si le café n'a pas de types renseignés, on le garde
-          if (cafe.availableCoffeeTypes.isEmpty) return true;
-          // Sinon, on vérifie s'il a au moins un type sélectionné
+          // Le café doit avoir au moins un des types sélectionnés
           return cafe.availableCoffeeTypes.any((type) => _selectedCoffeeTypes.contains(type));
         }).toList();
       }
@@ -317,11 +296,11 @@ class _MapPageState extends State<MapPage> {
           actions: [
             TextButton(
               onPressed: () async {
-                // Réinitialiser à tout sélectionné
+                // Réinitialiser les filtres
                 setDialogState(() {
                   tempDistance = 10.0;
                   tempCafeTypes = Set.from(CafeType.values);
-                  tempCoffeeTypes = Set.from(CoffeeType.values);
+                  tempCoffeeTypes = {}; // Aucun type de café sélectionné par défaut
                 });
               },
               child: const Text(
@@ -353,7 +332,6 @@ class _MapPageState extends State<MapPage> {
 
   @override
   Widget build(BuildContext context) {
-    print('🏗️ MapPage: build() appelé - _isLoading=$_isLoading, _cafes.length=${_cafes.length}, _hasUserLocation=$_hasUserLocation, _mapReady=$_mapReady');
     return Scaffold(
       appBar: AppBar(
         title: const Text(
@@ -390,17 +368,12 @@ class _MapPageState extends State<MapPage> {
               minZoom: 3.0,
               maxZoom: 18.0,
               onMapReady: () {
-                print('🗺️ MapPage: onMapReady appelé');
                 setState(() {
                   _mapReady = true;
                 });
-                print('🗺️ MapPage: _mapReady = $_mapReady');
                 // Centrer sur la position utilisateur si déjà disponible
                 if (_hasUserLocation) {
-                  print('🗺️ MapPage: Centrage sur position utilisateur: $_currentLocation');
                   _mapController.move(_currentLocation, 14.0);
-                } else {
-                  print('⚠️ MapPage: _hasUserLocation = false, pas de centrage');
                 }
               },
             ),
@@ -541,9 +514,7 @@ class _MapPageState extends State<MapPage> {
 
   /// Construit les markers des cafés
   List<Marker> _buildCafeMarkers() {
-    print('🎯 MapPage: _buildCafeMarkers appelé, _cafes.length = ${_cafes.length}');
     return _cafes.map((cafe) {
-      print('📍 MapPage: Création marker pour ${cafe.name} à ${cafe.location}');
       return Marker(
         point: cafe.location,
         width: 50,
