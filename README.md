@@ -119,7 +119,45 @@ Clés potentiellement nécessaires :
 
 ## 📸 Screenshots
 
-_Screenshots à venir après développement des fonctionnalités_
+### 🗺️ Coffee Map
+Carte interactive affichant les cafés à proximité avec filtres par type d'établissement et recettes disponibles.
+
+![Coffee Map](captures/1%20map.png)
+
+### 📍 Détails d'un café
+Informations détaillées d'un établissement avec distance, adresse et types de café disponibles.
+
+![Description café](captures/2%20description%20cafe.png)
+
+### 🏆 Leaderboard
+Classement des utilisateurs par nombre de cafés consommés, lieux visités et recettes goûtées.
+
+![Leaderboard](captures/3%20leaderboard.png)
+
+### 👤 Profil utilisateur
+Page profil avec statistiques personnelles et collection de badges d'accomplissement.
+
+![Page profil](captures/4%20page%20profil.png)
+
+### 🎖️ Badge débloqué
+Notification animée lors du déblocage d'un nouveau badge avec rotation 3D.
+
+![Badge](captures/5%20badge.png)
+
+### ☕ Coffee Tracker
+Suivi quotidien de la consommation de café avec barre de progression de caféine et historique par date.
+
+![Tracker](captures/6%20tracker.png)
+
+### 🔍 Recherche d'établissement
+Modale de recherche permettant de trouver et sélectionner un café lors de l'ajout d'une consommation.
+
+![Recherche de lieu](captures/7%20recherche%20de%20lieu%20dans%20la%20modale%20tracker.png)
+
+### ➕ Ajout de café
+Formulaire d'ajout d'une consommation avec sélection du type de café, lieu et date/heure.
+
+![Modale du tracker](captures/8%20modale%20du%20tracker.png)
 
 ## 🧪 Tests
 
