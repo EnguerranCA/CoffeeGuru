@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
@@ -32,20 +33,29 @@ class _MapPageState extends State<MapPage> {
   @override
   void initState() {
     super.initState();
+    print('🎬 MapPage: initState démarré');
     _initializeMap();
   }
 
   /// Initialise la carte : récupère la position et charge les cafés
   Future<void> _initializeMap() async {
-    await _getCurrentLocation();
+    print('🚀 MapPage: _initializeMap démarré');
+    
+    // Lancer la récupération de position en arrière-plan (sans attendre)
+    _getCurrentLocation();
+    
+    // Charger immédiatement les cafés avec la position par défaut
     await _loadCafes();
+    print('✅ MapPage: _initializeMap terminé');
   }
 
   /// Récupère la position actuelle de l'utilisateur
   Future<void> _getCurrentLocation() async {
+    print('📍 MapPage: _getCurrentLocation démarré');
     try {
       // Vérifier les permissions
       LocationPermission permission = await Geolocator.checkPermission();
+      print('🔐 MapPage: Permission = $permission');
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
         if (permission == LocationPermission.denied) {
@@ -65,29 +75,48 @@ class _MapPageState extends State<MapPage> {
 
       // 1. Utiliser d'abord la dernière position connue (instantané)
       Position? lastKnown = await Geolocator.getLastKnownPosition();
+      print('📍 MapPage: lastKnown = $lastKnown');
       if (lastKnown != null) {
         setState(() {
           _currentLocation = LatLng(lastKnown.latitude, lastKnown.longitude);
           _hasUserLocation = true;
         });
+        print('📍 MapPage: Position lastKnown définie: $_currentLocation');
         if (_mapReady) {
           _mapController.move(_currentLocation, 14.0);
         }
+        // Recharger les cafés avec la nouvelle position
+        _loadCafes();
       }
 
-      // 2. Ensuite, récupérer la position précise (en arrière-plan)
-      Position position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.medium, // Plus rapide que high
-      );
+      // 2. Ensuite, récupérer la position précise (en arrière-plan) avec timeout
+      try {
+        Position position = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.medium,
+        ).timeout(
+          const Duration(seconds: 10),
+          onTimeout: () {
+            print('⏱️ MapPage: Timeout sur getCurrentPosition, utilisation de lastKnown');
+            throw TimeoutException('Position timeout');
+          },
+        );
+        print('📍 MapPage: Position précise obtenue: ${position.latitude}, ${position.longitude}');
 
-      setState(() {
-        _currentLocation = LatLng(position.latitude, position.longitude);
-        _hasUserLocation = true;
-      });
+        setState(() {
+          _currentLocation = LatLng(position.latitude, position.longitude);
+          _hasUserLocation = true;
+        });
+        print('📍 MapPage: _hasUserLocation = $_hasUserLocation, _currentLocation = $_currentLocation');
 
-      // Centrer la carte sur la position si elle est prête
-      if (_mapReady) {
-        _mapController.move(_currentLocation, 14.0);
+        // Centrer la carte sur la position si elle est prête
+        if (_mapReady) {
+          _mapController.move(_currentLocation, 14.0);
+        }
+        
+        // Recharger les cafés avec la position précise
+        _loadCafes();
+      } on TimeoutException {
+        print('⏱️ MapPage: getCurrentPosition a timeout, on garde lastKnown');
       }
     } catch (e) {
       setState(() {
@@ -98,14 +127,22 @@ class _MapPageState extends State<MapPage> {
 
   /// Charge les cafés depuis le service
   Future<void> _loadCafes() async {
+    print('☕ MapPage: _loadCafes démarré, _isLoading = $_isLoading');
     try {
+      print('🗺️ MapPage: Chargement des cafés depuis position: $_currentLocation');
       await _cafeService.loadCafesFromAPI(_currentLocation);
+      print('🗺️ MapPage: loadCafesFromAPI terminé');
       final cafes = await _cafeService.getCafesNearby(_currentLocation, radiusKm: 10);
+      print('🗺️ MapPage: ${cafes.length} cafés chargés');
+      print('📊 MapPage: AVANT setState - _isLoading = $_isLoading, _cafes.length = ${_cafes.length}');
       setState(() {
         _cafes = cafes;
         _isLoading = false;
       });
-    } catch (e) {
+      print('📊 MapPage: APRÈS setState - _isLoading = $_isLoading, _cafes.length = ${_cafes.length}');
+    } catch (e, stackTrace) {
+      print('❌ MapPage: Erreur de chargement des cafés: $e');
+      print('📋 Stack trace: $stackTrace');
       setState(() {
         _errorMessage = 'Erreur de chargement des cafés: $e';
         _isLoading = false;
@@ -316,6 +353,7 @@ class _MapPageState extends State<MapPage> {
 
   @override
   Widget build(BuildContext context) {
+    print('🏗️ MapPage: build() appelé - _isLoading=$_isLoading, _cafes.length=${_cafes.length}, _hasUserLocation=$_hasUserLocation, _mapReady=$_mapReady');
     return Scaffold(
       appBar: AppBar(
         title: const Text(
@@ -352,10 +390,17 @@ class _MapPageState extends State<MapPage> {
               minZoom: 3.0,
               maxZoom: 18.0,
               onMapReady: () {
-                _mapReady = true;
+                print('🗺️ MapPage: onMapReady appelé');
+                setState(() {
+                  _mapReady = true;
+                });
+                print('🗺️ MapPage: _mapReady = $_mapReady');
                 // Centrer sur la position utilisateur si déjà disponible
                 if (_hasUserLocation) {
+                  print('🗺️ MapPage: Centrage sur position utilisateur: $_currentLocation');
                   _mapController.move(_currentLocation, 14.0);
+                } else {
+                  print('⚠️ MapPage: _hasUserLocation = false, pas de centrage');
                 }
               },
             ),
@@ -496,7 +541,9 @@ class _MapPageState extends State<MapPage> {
 
   /// Construit les markers des cafés
   List<Marker> _buildCafeMarkers() {
+    print('🎯 MapPage: _buildCafeMarkers appelé, _cafes.length = ${_cafes.length}');
     return _cafes.map((cafe) {
+      print('📍 MapPage: Création marker pour ${cafe.name} à ${cafe.location}');
       return Marker(
         point: cafe.location,
         width: 50,

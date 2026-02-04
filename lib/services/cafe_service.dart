@@ -33,12 +33,16 @@ class CafeService {
   Future<List<Cafe>> getCafesNearby(LatLng position,
       {double radiusKm = 5.0}) async {
     try {
+      print('🔍 CafeService.getCafesNearby: lat=${position.latitude}, lng=${position.longitude}, radius=$radiusKm km');
+      
       final data = await _db.getCafePlacesNearby(
         position.latitude,
         position.longitude,
         radiusKm,
       );
 
+      print('📦 Données reçues: ${data.length} cafés');
+      
       final cafes = data.map((json) => Cafe.fromJson(json)).toList();
 
       // Trier par distance
@@ -47,8 +51,9 @@ class CafeService {
 
       _cachedCafes = cafes;
       return cafes;
-    } catch (e) {
+    } catch (e, stackTrace) {
       print('❌ Erreur dans CafeService.getCafesNearby: $e');
+      print('📋 Stack trace: $stackTrace');
       return [];
     }
   }
