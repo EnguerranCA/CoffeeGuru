@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import '../models/coffee_log.dart';
 import '../services/coffee_service.dart';
 import '../services/badge_service.dart';
@@ -22,7 +23,13 @@ class _TrackerPageState extends State<TrackerPage> {
   @override
   void initState() {
     super.initState();
-    _loadLogs();
+    _initializePage();
+  }
+
+  Future<void> _initializePage() async {
+    // Initialiser le formatage de date pour le français
+    await initializeDateFormatting('fr_FR', null);
+    await _loadLogs();
   }
 
   Future<void> _loadLogs() async {
